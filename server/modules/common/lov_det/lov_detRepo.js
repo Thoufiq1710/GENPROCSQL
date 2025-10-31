@@ -1,4 +1,4 @@
-import pool from "../../../config/database.js";
+import pool from "../../../config/db.js";
 const listOfValuesDetailsRepo = {
   insertOrUpdateListOfValuesDetails: async (
     lovDetId,
@@ -15,7 +15,7 @@ const listOfValuesDetailsRepo = {
           ?, ?, ?, ?, ?, ?, ?, @p_LogicApps_Result
         );
       `;
- 
+
       // Execute the stored procedure
       await pool.query(query, [
         lovDetId,
@@ -26,15 +26,20 @@ const listOfValuesDetailsRepo = {
         status,
         inactiveReason,
       ]);
- 
+
       // Get the OUT parameter value
       const [resultRows] = await pool.query(
         "SELECT @p_LogicApps_Result AS message;"
       );
- 
+
       const message = resultRows?.[0]?.message || "Unknown response";
-      const isError = message.toLowerCase().includes("error");
- 
+      const isError =
+        message.toLowerCase().includes("error") ||
+        message.toLowerCase().includes("duplicate") ||
+        message.toLowerCase().includes("failed") ||
+        message.toLowerCase().includes("invalid") ||
+        message.toLowerCase().includes("not found");
+
       return {
         success: !isError,
         message,
@@ -52,5 +57,5 @@ const listOfValuesDetailsRepo = {
     }
   },
 };
- 
+
 export default listOfValuesDetailsRepo;

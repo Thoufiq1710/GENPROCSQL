@@ -1,17 +1,17 @@
 import pool from "../../../config/db.js";
 
 const languageRepo = {
-  insertOrUpdateLanguage: async (
+  insertOrUpdateLanguage: async ({
     languageId,
     languageName,
     createdUser,
     status,
-    inactiveReason
-  ) => {
+    inactiveReason,
+  }) => {
     try {
       const query =
         "CALL LT_DC_DCS_SP_Insert_Update_Language(?, ?, ?, ?, ?, @p_LogicApps_Result);";
- 
+
       // Execute the stored procedure
       await pool.query(query, [
         languageId,
@@ -20,16 +20,21 @@ const languageRepo = {
         status,
         inactiveReason,
       ]);
- 
+
       // Fetch the OUT parameter value
       const [resultRows] = await pool.query(
         "SELECT @p_LogicApps_Result AS message;"
       );
       const message = resultRows?.[0]?.message || "Unknown response";
- 
+      console.log("Stored Procedure Message:", message);
       // Determine success based on the message
-      const isError = message.toLowerCase().includes("error");
- 
+      const isError =
+        message.toLowerCase().includes("error") ||
+        message.toLowerCase().includes("duplicate") ||
+        message.toLowerCase().includes("failed") ||
+        message.toLowerCase().includes("invalid") ||
+        message.toLowerCase().includes("not found");
+
       return {
         success: !isError,
         message,
