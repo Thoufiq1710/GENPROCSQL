@@ -1,0 +1,102 @@
+USE GENPROCSQL;
+DELIMITER $$
+ 
+CREATE PROCEDURE LT_DC_DCS_SP_Insert_Update_ListOfValues (
+    IN p_LOV_ID INT,
+    IN p_LOV_NAME VARCHAR(200),
+    IN p_LOV_DESCRIPTION VARCHAR(255),
+    IN p_C2C_User INT,
+    IN p_C2C_Status BOOLEAN,
+    IN p_C2C_Inactive_Reason VARCHAR(500),
+    OUT p_LogicApps_Result VARCHAR(250)
+)
+BEGIN
+    -- ===============================================================================
+    -- Company: LogicAppsMI              Description: INSERT_UPDATE_LIST_OF_VALUES
+    -- Product name: DC                  Module name: DCS
+    -- Date: 2025-10-30 10:25:00         Author name: Mohamed Thoufiq M, Ganesh
+    -- ===============================================================================
+ 
+    DECLARE v_Record_Count INT DEFAULT 0;
+    DECLARE v_Err_Msg VARCHAR(250);
+ 
+    -- Exception handler
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SELECT Error_Msg INTO v_Err_Msg 
+        FROM DCS_M_ERR_MESSAGE 
+        WHERE Error_Code = 'E1012' LIMIT 1;
+        SET p_LogicApps_Result = v_Err_Msg;
+        ROLLBACK;
+    END;
+ 
+    START TRANSACTION;
+ 
+    -- Check for duplicate LOV_NAME
+    SELECT EXISTS (
+    SELECT 1 FROM dcs_m_list_of_values
+    WHERE LOV_NAME = p_LOV_NAME
+	AND (p_LOV_ID <= 0 OR LOV_ID <> p_LOV_ID)
+	) INTO v_Record_Count;
+ 
+    -- INSERT CASE: New record and no duplicate
+    IF (p_LOV_ID <= 0 AND v_Record_Count = 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg 
+        FROM DCS_M_ERR_MESSAGE 
+        WHERE Error_Code = 'S1010' LIMIT 1;
+ 
+        INSERT INTO DCS_M_LIST_OF_VALUES (
+            LOV_NAME,
+            LOV_DESCRIPTION,
+            C2C_Cdate,
+            C2C_Cuser,
+            C2C_Status,
+            C2C_Inactive_Reason
+        ) VALUES (
+            p_LOV_NAME,
+            p_LOV_DESCRIPTION,
+            CONVERT_TZ(NOW(), '+00:00', '+05:30'),
+            p_C2C_User,
+            p_C2C_Status,
+            p_C2C_Inactive_Reason
+        );
+ 
+        SET p_LogicApps_Result = v_Err_Msg;
+ 
+    -- DUPLICATE CASE ON INSERT
+    ELSEIF (p_LOV_ID <= 0 AND v_Record_Count > 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg 
+        FROM DCS_M_ERR_MESSAGE 
+        WHERE Error_Code = 'E1011' LIMIT 1;
+        SET p_LogicApps_Result = v_Err_Msg;
+ 
+    -- UPDATE CASE: Existing record, no duplicate
+    ELSEIF (p_LOV_ID > 0 AND v_Record_Count = 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg 
+        FROM DCS_M_ERR_MESSAGE 
+        WHERE Error_Code = 'S1011' LIMIT 1;
+ 
+        UPDATE DCS_M_LIST_OF_VALUES
+        SET
+            LOV_NAME = p_LOV_NAME,
+            LOV_DESCRIPTION = p_LOV_DESCRIPTION,
+            C2C_Udate = CONVERT_TZ(NOW(), '+00:00', '+05:30'),
+            C2C_Uuser = p_C2C_User,
+            C2C_Status = p_C2C_Status,
+            C2C_Inactive_Reason = p_C2C_Inactive_Reason
+        WHERE LOV_ID = p_LOV_ID;
+ 
+        SET p_LogicApps_Result = v_Err_Msg;
+ 
+    -- DUPLICATE CASE ON UPDATE
+    ELSEIF (p_LOV_ID > 0 AND v_Record_Count > 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg 
+        FROM DCS_M_ERR_MESSAGE 
+        WHERE Error_Code = 'E1011' LIMIT 1;
+        SET p_LogicApps_Result = v_Err_Msg;
+    END IF;
+ 
+    COMMIT;
+END$$
+ 
+DELIMITER ;
