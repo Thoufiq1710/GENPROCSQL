@@ -1,8 +1,8 @@
 import mysql from "mysql2";
 import dotenv from "dotenv";
 import path from "path";
-dotenv.config({ path: path.resolve(__dirname, "../../.env") });
- 
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -12,7 +12,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
 });
- 
+
 pool.getConnection((err, connection) => {
   if (err) {
     console.error("❌ Database connection failed:", err.message);
@@ -21,5 +21,5 @@ pool.getConnection((err, connection) => {
     connection.release();
   }
 });
- 
+
 export default pool.promise();

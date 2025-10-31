@@ -5,7 +5,7 @@ const languageService = {
     try {
       // ✅ Call repository layer (where SP is executed)
       const result = await languageRepo.insertOrUpdateLanguage(languageData);
- 
+
       return result;
     } catch (err) {
       console.error("❌ languageService Error:", err.message);
