@@ -1,0 +1,105 @@
+USE GENPROCSQL;
+DELIMITER $$
+  
+/* SP for Insert,update Language*/
+
+CREATE PROCEDURE LT_DC_DCS_SP_Insert_Update_Language (
+    IN p_Language_ID INT,
+    IN p_Language_Name VARCHAR(100),
+    IN p_C2C_User INT,
+    IN p_C2C_Status BOOLEAN,
+    IN p_C2C_Inactive_Reason VARCHAR(500),
+    OUT p_LogicApps_Result VARCHAR(250)
+)
+BEGIN
+ -- ===============================================================================
+    -- Company: LogicAppsMI                 Description: INSERT_UPDATE_LANGUAGE          Product name: DC
+    -- Module name: DCS                         Date: 2025-10-29 12:46:07                 Author name: Mohamed Thoufiq M
+    -- ===============================================================================
+    DECLARE v_Record_Count INT DEFAULT 0;
+    DECLARE v_Err_Msg VARCHAR(500);
+
+    -- Error handler for SQL exceptions
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1012'
+        LIMIT 1;
+        SET p_LogicApps_Result = v_Err_Msg;
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    -- Check for duplicate Language_Name (exclude self on update)
+    SELECT COUNT(*) INTO v_Record_Count
+    FROM DCS_M_LANGUAGE
+    WHERE Language_Name = p_Language_Name
+      AND (p_Language_ID <= 0 OR Language_ID <> p_Language_ID);
+
+    -- CASE 1: INSERT NEW RECORD (NO DUPLICATE)
+    IF (p_Language_ID <= 0 AND v_Record_Count = 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'S1010'
+        LIMIT 1;
+
+        INSERT INTO DCS_M_LANGUAGE (
+            Language_Name,
+            C2C_Cdate,
+            C2C_Cuser,
+            C2C_Status,
+            C2C_Inactive_Reason
+        ) VALUES (
+            p_Language_Name,
+            CONVERT_TZ(NOW(), '+00:00', '+05:30'),
+            p_C2C_User,
+            p_C2C_Status,
+            p_C2C_Inactive_Reason
+        );
+
+        SET p_LogicApps_Result = v_Err_Msg;
+
+    -- CASE 2: INSERT DUPLICATE (NAME ALREADY EXISTS)
+    ELSEIF (p_Language_ID <= 0 AND v_Record_Count > 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1011'
+        LIMIT 1;
+
+        SET p_LogicApps_Result = v_Err_Msg;
+
+    -- CASE 3: UPDATE RECORD (NO DUPLICATE)
+    ELSEIF (p_Language_ID > 0 AND v_Record_Count = 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'S1011'
+        LIMIT 1;
+
+        UPDATE DCS_M_LANGUAGE
+        SET 
+            Language_Name = p_Language_Name,
+            C2C_Udate = CONVERT_TZ(NOW(), '+00:00', '+05:30'),
+            C2C_Uuser = p_C2C_User,
+            C2C_Status = p_C2C_Status,
+            C2C_Inactive_Reason = p_C2C_Inactive_Reason
+        WHERE Language_ID = p_Language_ID;
+
+        SET p_LogicApps_Result = v_Err_Msg;
+
+    -- CASE 4: UPDATE DUPLICATE (NAME EXISTS IN ANOTHER RECORD)
+    ELSEIF (p_Language_ID > 0 AND v_Record_Count > 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1011'
+        LIMIT 1;
+
+        SET p_LogicApps_Result = v_Err_Msg;
+    END IF;
+
+    COMMIT;
+END$$
+
+DELIMITER ;
+
