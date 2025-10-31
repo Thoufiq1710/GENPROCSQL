@@ -3,11 +3,18 @@ import languageService from "./languageService.js";
 const languageController = {
   insertOrUpdateLanguage: async (req, res) => {
     try {
+      if (!req.body || (Array.isArray(req.body) && req.body.length === 0)) {
+        return res.status(400).json({
+          success: false,
+          message: "Request body cannot be empty.",
+        });
+      }
+
       // ✅ Accept both single object or array
       const languageArray = Array.isArray(req.body) ? req.body : [req.body];
       const results = [];
       const errors = [];
- 
+
       for (const [index, lang] of languageArray.entries()) {
         const {
           languageId,
@@ -16,7 +23,7 @@ const languageController = {
           status,
           inactiveReason,
         } = lang;
- 
+
         // ✅ Validation
         if (!languageName || !status) {
           errors.push({
@@ -26,7 +33,7 @@ const languageController = {
           });
           continue;
         }
- 
+
         try {
           // ✅ Call service to execute SP
           const result = await languageService.insertOrUpdateLanguage({
@@ -36,7 +43,7 @@ const languageController = {
             status,
             inactiveReason: inactiveReason || "",
           });
- 
+
           // ✅ Handle SP result (Success / Duplicate)
           if (!result || !result.success) {
             errors.push({
@@ -46,7 +53,7 @@ const languageController = {
             });
             continue;
           }
- 
+
           results.push({ ...lang, dbMessage: result.message });
         } catch (err) {
           errors.push({
@@ -56,7 +63,7 @@ const languageController = {
           });
         }
       }
- 
+
       // ✅ Consolidated Response
       res.status(errors.length ? 207 : 201).json({
         success: errors.length === 0,

@@ -16,7 +16,7 @@ const dbConnectionRepo = {
       const query = `
         CALL LT_DC_DCS_SP_Insert_Update_DB_Connection(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @p_LogicApps_Result);
       `;
- 
+
       // Execute SP
       await pool.query(query, [
         dbConnectionId,
@@ -30,15 +30,20 @@ const dbConnectionRepo = {
         status,
         inactiveReason,
       ]);
- 
+
       // Fetch OUT parameter
       const [resultRows] = await pool.query(
         "SELECT @p_LogicApps_Result AS message;"
       );
- 
+
       const message = resultRows?.[0]?.message || "Unknown response";
-      const isError = message.toLowerCase().includes("error");
- 
+      const isError =
+        message.toLowerCase().includes("error") ||
+        message.toLowerCase().includes("duplicate") ||
+        message.toLowerCase().includes("failed") ||
+        message.toLowerCase().includes("invalid") ||
+        message.toLowerCase().includes("not found");
+
       return { success: !isError, message };
     } catch (err) {
       console.error(
@@ -53,5 +58,5 @@ const dbConnectionRepo = {
     }
   },
 };
- 
+
 export default dbConnectionRepo;

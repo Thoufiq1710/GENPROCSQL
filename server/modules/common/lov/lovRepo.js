@@ -11,7 +11,7 @@ const lovRepo = {
     try {
       // ✅ Call the stored procedure
       const query = `CALL LT_DC_DCS_SP_Insert_Update_ListOfValues(?, ?, ?, ?, ?, ?, @p_LogicApps_Result);`;
- 
+
       await pool.query(query, [
         lovId,
         lovName,
@@ -20,17 +20,22 @@ const lovRepo = {
         status,
         inactiveReason,
       ]);
- 
+
       // ✅ Get OUT parameter
       const [resultRows] = await pool.query(
         "SELECT @p_LogicApps_Result AS message;"
       );
- 
+
       const message = resultRows?.[0]?.message || "Unknown response";
- 
+
       // ✅ Determine success based on message
-      const isError = message.toLowerCase().includes("error");
- 
+      const isError =
+        message.toLowerCase().includes("error") ||
+        message.toLowerCase().includes("duplicate") ||
+        message.toLowerCase().includes("failed") ||
+        message.toLowerCase().includes("invalid") ||
+        message.toLowerCase().includes("not found");
+
       return { success: !isError, message };
     } catch (err) {
       console.error(
@@ -45,5 +50,5 @@ const lovRepo = {
     }
   },
 };
- 
+
 export default lovRepo;
