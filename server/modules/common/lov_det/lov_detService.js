@@ -11,17 +11,18 @@ const listOfValuesDetailsService = {
         status,
         inactiveReason,
       } = lovDetailsData;
- 
-      const result = await listOfValuesDetailsRepo.insertOrUpdateListOfValuesDetails(
-        lovDetId || 0,
-        lovId,
-        lovDetName,
-        lovDetDescription || "",
-        createdUser,
-        status,
-        inactiveReason || ""
-      );
- 
+
+      const result =
+        await listOfValuesDetailsRepo.insertOrUpdateListOfValuesDetails(
+          lovDetId || 0,
+          lovId,
+          lovDetName,
+          lovDetDescription || "",
+          createdUser,
+          status,
+          inactiveReason || ""
+        );
+
       return result;
     } catch (err) {
       console.error("❌ listOfValuesDetailsService Error:", err.message);
@@ -33,5 +34,5 @@ const listOfValuesDetailsService = {
     }
   },
 };
- 
+
 export default listOfValuesDetailsService;

@@ -8,6 +8,7 @@ import moduleRoutes from "../modules/common/module/moduleRoutes.js";
 import lov_detRoutes from "../modules/common/lov_det/lov_detRoutes.js";
 import projectRoutes from "../modules/common/project/projectRoutes.js";
 import dbConnectionRoutes from "../modules/common/dbConnection/dbConnectionRoutes.js";
+import dropDownRoutes from "../modules/common/dropDowm/dropDownRoutes.js";
 
 // ✅ Use routes with base paths
 router.use("/language", languageRoutes);
@@ -16,5 +17,6 @@ router.use("/module", moduleRoutes);
 router.use("/lov_det", lov_detRoutes);
 router.use("/project", projectRoutes);
 router.use("/dbConnection", dbConnectionRoutes);
+router.use("/drop-down", dropDownRoutes);
 
 export default router;

@@ -11,6 +11,7 @@ const lovRepo = {
     try {
       // ✅ Call the stored procedure
       const query = `CALL LT_DC_DCS_SP_Insert_Update_ListOfValues(?, ?, ?, ?, ?, ?, @p_LogicApps_Result);`;
+      `CALL insertlanguage(?, ?);`;
 
       await pool.query(query, [
         lovId,
