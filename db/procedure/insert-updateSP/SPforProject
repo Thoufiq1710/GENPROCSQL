@@ -1,0 +1,109 @@
+USE GENPROCSQL;
+
+DELIMITER $$
+
+CREATE PROCEDURE LT_DC_DCS_SP_Insert_Update_PROJECT (
+    IN p_PROJECT_ID INT,
+    IN p_PROJECT_NAME VARCHAR(255),
+    IN p_Language_ID INT,
+    IN p_C2C_User INT,
+    IN p_C2C_Status BOOLEAN,
+    IN p_C2C_Inactive_Reason VARCHAR(500),
+    OUT p_LogicApps_Result VARCHAR(250)
+)
+BEGIN
+ -- ===============================================================================
+    -- Company: LogicAppsMI                 Description: INSERT_UPDATE_PROJECT         Product name: DC
+    -- Module name: DCS                         Date: 2025-10-29 13:00:00               Author name: Mohamed Thoufiq M
+    -- ===============================================================================
+    DECLARE v_Record_Count INT DEFAULT 0;
+    DECLARE v_Err_Msg VARCHAR(250);
+
+    -- Handle SQL exceptions
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1012'
+        LIMIT 1;
+        SET p_LogicApps_Result = v_Err_Msg;
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    -- Check for duplicate PROJECT_NAME excluding self during update
+    SELECT COUNT(*) INTO v_Record_Count
+    FROM DCS_M_PROJECT
+    WHERE PROJECT_NAME = p_PROJECT_NAME
+      AND (p_PROJECT_ID <= 0 OR PROJECT_ID <> p_PROJECT_ID);
+
+    -- Case 1: INSERT (New record, no duplicate)
+    IF (p_PROJECT_ID <= 0 AND v_Record_Count = 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'S1010'
+        LIMIT 1;
+
+        INSERT INTO DCS_M_PROJECT (
+            PROJECT_NAME,
+            Language_ID,
+            C2C_Cdate,
+            C2C_Cuser,
+            C2C_Status,
+            C2C_Inactive_Reason
+        ) VALUES (
+            p_PROJECT_NAME,
+            p_Language_ID,
+            CONVERT_TZ(NOW(), '+00:00', '+05:30'),
+            p_C2C_User,
+            p_C2C_Status,
+            p_C2C_Inactive_Reason
+        );
+
+        SET p_LogicApps_Result = v_Err_Msg;
+
+    -- Case 2: DUPLICATE on INSERT
+    ELSEIF (p_PROJECT_ID <= 0 AND v_Record_Count > 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1011'
+        LIMIT 1;
+
+        SET p_LogicApps_Result = v_Err_Msg;
+
+    -- Case 3: UPDATE (Existing record, no duplicate)
+    ELSEIF (p_PROJECT_ID > 0 AND v_Record_Count = 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'S1011'
+        LIMIT 1;
+
+        UPDATE DCS_M_PROJECT
+        SET
+            PROJECT_NAME = p_PROJECT_NAME,
+            Language_ID = p_Language_ID,
+            C2C_Udate = CONVERT_TZ(NOW(), '+00:00', '+05:30'),
+            C2C_Uuser = p_C2C_User,
+            C2C_Status = p_C2C_Status,
+            C2C_Inactive_Reason = p_C2C_Inactive_Reason
+        WHERE PROJECT_ID = p_PROJECT_ID;
+
+        SET p_LogicApps_Result = v_Err_Msg;
+
+    -- Case 4: DUPLICATE on UPDATE
+    ELSEIF (p_PROJECT_ID > 0 AND v_Record_Count > 0) THEN
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1011'
+        LIMIT 1;
+
+        SET p_LogicApps_Result = v_Err_Msg;
+    END IF;
+
+    COMMIT;
+END$$
+
+DELIMITER ;
+
+

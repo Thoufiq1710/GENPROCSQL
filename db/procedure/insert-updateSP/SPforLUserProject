@@ -1,0 +1,120 @@
+USE GENPROCSQL;
+DELIMITER $$
+
+CREATE PROCEDURE LT_DC_DCS_SP_Insert_Update_User_Project (
+    IN p_User_Project_ID INT,
+    IN p_User_ID INT,
+    IN p_Project_ID INT,
+    IN p_C2C_User INT,
+    IN p_C2C_Status BOOLEAN,
+    IN p_C2C_Inactive_Reason VARCHAR(500),
+    OUT p_LogicApps_Result VARCHAR(250)
+)
+BEGIN
+-- ===============================================================================
+    -- Company: LogicAppsMI              Description: INSERT_UPDATE_USER_PROJECT
+    -- Product name: DC                  Module name: DCS
+    -- Date: 2025-10-30 11:30:00         Author name: Mohamed Thoufiq M, Ganesh
+    -- ===============================================================================
+
+    -- Variable Declarations
+    DECLARE v_Record_Count INT DEFAULT 0;     -- To check for duplicate user-project mapping
+    DECLARE v_Err_Msg VARCHAR(250);           -- To hold message from error table
+
+    -- Exception Handling
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Fetch general error message for SQL exception
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1012'
+        LIMIT 1;
+
+        SET p_LogicApps_Result = v_Err_Msg;
+        ROLLBACK;
+    END;
+
+    -- Start Transaction
+    START TRANSACTION;
+
+    -- Step 1: Duplicate Validation
+    SELECT COUNT(*) INTO v_Record_Count
+    FROM DCS_M_USER_PROJECT
+    WHERE User_ID = p_User_ID
+      AND Project_ID = p_Project_ID
+      AND (p_User_Project_ID <= 0 OR User_Project_ID <> p_User_Project_ID);
+
+    -- Step 2: Insert Logic - New Record and No Duplicate
+    IF (p_User_Project_ID <= 0 AND v_Record_Count = 0) THEN
+        -- Fetch success message for Insert
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'S1010'
+        LIMIT 1;
+
+        -- Insert New Record
+        INSERT INTO DCS_M_USER_PROJECT (
+            User_ID,
+            Project_ID,
+            C2C_Cdate,
+            C2C_Cuser,
+            C2C_Status,
+            C2C_Inactive_Reason
+        ) VALUES (
+            p_User_ID,
+            p_Project_ID,
+            CONVERT_TZ(NOW(), '+00:00', '+05:30'),
+            p_C2C_User,
+            p_C2C_Status,
+            p_C2C_Inactive_Reason
+        );
+
+        SET p_LogicApps_Result = v_Err_Msg; -- Success message for insert
+
+    -- Step 3: Duplicate Found on Insert
+    ELSEIF (p_User_Project_ID <= 0 AND v_Record_Count > 0) THEN
+        -- Fetch duplicate error message
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1011'
+        LIMIT 1;
+
+        SET p_LogicApps_Result = v_Err_Msg; -- Duplicate message for insert
+
+    -- Step 4: Update Logic - Existing Record and No Duplicate
+    ELSEIF (p_User_Project_ID > 0 AND v_Record_Count = 0) THEN
+        -- Fetch success message for Update
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'S1011'
+        LIMIT 1;
+
+        -- Update Existing Record
+        UPDATE DCS_M_USER_PROJECT
+        SET
+            User_ID = p_User_ID,
+            Project_ID = p_Project_ID,
+            C2C_Udate = CONVERT_TZ(NOW(), '+00:00', '+05:30'),
+            C2C_Uuser = p_C2C_User,
+            C2C_Status = p_C2C_Status,
+            C2C_Inactive_Reason = p_C2C_Inactive_Reason
+        WHERE User_Project_ID = p_User_Project_ID;
+
+        SET p_LogicApps_Result = v_Err_Msg; -- Success message for update
+
+    -- Step 5: Duplicate Found on Update
+    ELSEIF (p_User_Project_ID > 0 AND v_Record_Count > 0) THEN
+        -- Fetch duplicate error message
+        SELECT Error_Msg INTO v_Err_Msg
+        FROM DCS_M_ERR_MESSAGE
+        WHERE Error_Code = 'E1011'
+        LIMIT 1;
+
+        SET p_LogicApps_Result = v_Err_Msg; -- Duplicate message for update
+    END IF;
+
+    -- Commit the Transaction
+    COMMIT;
+END$$
+
+DELIMITER ;
