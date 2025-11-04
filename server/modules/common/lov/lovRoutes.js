@@ -8,5 +8,4 @@ import lovController from "./lovController.js";
 
 router.post("/names", lovController.insertOrUpdateLov);
 
- 
 export default router;

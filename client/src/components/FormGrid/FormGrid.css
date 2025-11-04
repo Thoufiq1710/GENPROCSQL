@@ -1,0 +1,34 @@
+.card {
+  border-radius: 0.8rem !important;
+}
+
+.table th,
+.table td {
+  vertical-align: middle !important;
+  padding: 0.6rem 0.75rem !important;
+}
+
+.table thead th {
+  font-weight: 600;
+}
+
+button.btn {
+  font-weight: 500;
+  border-radius: 0.5rem !important;
+}
+
+form {
+  margin-top: 1rem;
+}
+
+.table td .form-control,
+.table td .form-select {
+  height: 38px;
+  font-size: 0.95rem;
+}
+
+.table td .form-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

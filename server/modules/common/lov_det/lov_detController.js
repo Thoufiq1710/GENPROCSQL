@@ -6,7 +6,7 @@ const listOfValuesDetailsController = {
       const lovDetailsArray = Array.isArray(req.body) ? req.body : [req.body];
       const results = [];
       const errors = [];
- 
+
       for (const [index, item] of lovDetailsArray.entries()) {
         const {
           lovDetId,
@@ -17,7 +17,7 @@ const listOfValuesDetailsController = {
           status,
           inactiveReason,
         } = item;
- 
+
         // ✅ Validation
         if (!lovId || !lovDetName || !status) {
           errors.push({
@@ -27,7 +27,7 @@ const listOfValuesDetailsController = {
           });
           continue;
         }
- 
+
         try {
           const result =
             await listOfValuesDetailsService.insertOrUpdateListOfValuesDetails({
@@ -39,7 +39,7 @@ const listOfValuesDetailsController = {
               status,
               inactiveReason: inactiveReason || "",
             });
- 
+
           if (!result || !result.success) {
             errors.push({
               index,
@@ -48,13 +48,13 @@ const listOfValuesDetailsController = {
             });
             continue;
           }
- 
+
           results.push({ ...item, dbMessage: result.message });
         } catch (err) {
           errors.push({ index, error: err.message, record: item });
         }
       }
- 
+
       // ✅ Consolidated Response
       res.status(errors.length ? 207 : 201).json({
         success: errors.length === 0,
@@ -84,5 +84,5 @@ const listOfValuesDetailsController = {
     }
   },
 };
- 
+
 export default listOfValuesDetailsController;

@@ -1,0 +1,35 @@
+/* 🌐 Container styling */
+.custom-tab-menu {
+  border-bottom: 2px solid #dee2e6;
+  background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  gap: 1rem;
+}
+
+/* 🧭 Default tab link */
+.custom-tab-menu .nav-link {
+  color: #495057; /* neutral text color */
+  font-weight: 500;
+  border: none;
+  transition: all 0.3s ease;
+  background-color: transparent;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+/* 🎯 Hover effect */
+.custom-tab-menu .nav-link:hover {
+  background-color: #e9ecef; /* light gray background */
+  color: #212529; /* slightly darker text */
+}
+
+/* 🔵 Active tab look */
+.custom-tab-menu .nav-link.active {
+  background-color: #0d6efd1a; /* subtle blue tint */
+  color: #0d6efd !important; /* blue text */
+  font-weight: 600;
+  border-bottom: 3px solid #0d6efd;
+  border-radius: 0.5rem 0.5rem 0 0;
+}

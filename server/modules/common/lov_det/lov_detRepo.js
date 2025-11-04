@@ -10,6 +10,7 @@ const listOfValuesDetailsRepo = {
     inactiveReason
   ) => {
     try {
+      
       const query = `
         CALL LT_DC_DCS_SP_Insert_Update_ListOfValuesDetails(
           ?, ?, ?, ?, ?, ?, ?, @p_LogicApps_Result
