@@ -26,7 +26,7 @@ const languageRepo = {
         "SELECT @p_LogicApps_Result AS message;"
       );
       const message = resultRows?.[0]?.message || "Unknown response";
-      console.log("Stored Procedure Message:", message);
+
       // Determine success based on the message
       const isError =
         message.toLowerCase().includes("error") ||

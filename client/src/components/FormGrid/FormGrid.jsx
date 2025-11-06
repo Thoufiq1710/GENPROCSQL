@@ -14,7 +14,14 @@ import {
 import { Trash } from "react-bootstrap-icons"; // 🗑️ Optional Bootstrap icon
 import "./FormGrid.css";
 
-const FormGrid = ({ title, fields, onSubmit, isLoading, serverResponse }) => {
+const FormGrid = ({
+  title,
+  fields,
+  onSubmit,
+  isLoading,
+  serverResponse,
+  defaultValues,
+}) => {
   const [rows, setRows] = useState([]);
 
   // 🧩 Helper to create an empty row
@@ -35,8 +42,11 @@ const FormGrid = ({ title, fields, onSubmit, isLoading, serverResponse }) => {
 
   //  Initialize the first empty row
   useEffect(() => {
-    if (fields?.length > 0) setRows([createEmptyRow()]);
-  }, [fields]);
+    if (fields?.length > 0) {
+      if (defaultValues) setRows([defaultValues]); // ✅ prefill edit values
+      else setRows([createEmptyRow()]);
+    }
+  }, [fields, defaultValues]);
 
   // ➕ Add Row
   const handleAddRow = () => {
@@ -55,7 +65,6 @@ const FormGrid = ({ title, fields, onSubmit, isLoading, serverResponse }) => {
     setRows((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ Submit
   // ✅ Submit
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -216,16 +225,6 @@ const FormGrid = ({ title, fields, onSubmit, isLoading, serverResponse }) => {
                 </Button>
               </div>
             </Form>
-
-            {/* Server response */}
-            {serverResponse && (
-              <Alert
-                className="mt-4"
-                variant={serverResponse.success ? "success" : "danger"}
-              >
-                {serverResponse.message}
-              </Alert>
-            )}
           </Card.Body>
         </Col>
       </Row>
@@ -258,6 +257,7 @@ FormGrid.propTypes = {
     success: PropTypes.bool,
     message: PropTypes.string,
   }),
+  defaultValues: PropTypes.object, // ✅ for edit functionality
 };
 
 FormGrid.defaultProps = {

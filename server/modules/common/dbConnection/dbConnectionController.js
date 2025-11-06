@@ -4,12 +4,10 @@ const dbConnectionController = {
   insertOrUpdateDBConnection: async (req, res) => {
     try {
       // Accept both single object or array input
-      const dbConnectionArray = Array.isArray(req.body)
-        ? req.body
-        : [req.body];
+      const dbConnectionArray = Array.isArray(req.body) ? req.body : [req.body];
       const results = [];
       const errors = [];
- 
+
       for (const [index, conn] of dbConnectionArray.entries()) {
         const {
           dbConnectionId,
@@ -23,9 +21,9 @@ const dbConnectionController = {
           status,
           inactiveReason,
         } = conn;
- 
+
         // ✅ Basic validation
-        if (!dbName || !serverName || !userName || !projectId || !status) {
+        if (!dbName || !serverName || !userName || !projectId) {
           errors.push({
             index,
             error:
@@ -34,7 +32,7 @@ const dbConnectionController = {
           });
           continue;
         }
- 
+
         try {
           // ✅ Call service to execute SP
           const result = await dbConnectionService.insertOrUpdateDBConnection({
@@ -49,7 +47,7 @@ const dbConnectionController = {
             status,
             inactiveReason: inactiveReason || "",
           });
- 
+
           // ✅ Handle SP result (Success / Duplicate / Failure)
           if (!result || !result.success) {
             errors.push({
@@ -59,13 +57,13 @@ const dbConnectionController = {
             });
             continue;
           }
- 
+
           results.push({ ...conn, dbMessage: result.message });
         } catch (err) {
           errors.push({ index, error: err.message, connection: conn });
         }
       }
- 
+
       // ✅ Final Consolidated Response
       res.status(errors.length ? 207 : 201).json({
         success: errors.length === 0,
@@ -94,5 +92,5 @@ const dbConnectionController = {
     }
   },
 };
- 
+
 export default dbConnectionController;

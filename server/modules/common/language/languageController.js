@@ -25,7 +25,7 @@ const languageController = {
         } = lang;
 
         // ✅ Validation
-        if (!languageName || !status) {
+        if (!languageName) {
           errors.push({
             index,
             error: "Language Name and Status are required.",
@@ -63,6 +63,9 @@ const languageController = {
           });
         }
       }
+
+      console.log(results);
+      console.log(errors);
 
       // ✅ Consolidated Response
       res.status(errors.length ? 207 : 201).json({
