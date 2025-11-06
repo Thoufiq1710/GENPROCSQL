@@ -5,7 +5,7 @@ const projectController = {
       const projectArray = Array.isArray(req.body) ? req.body : [req.body];
       const results = [];
       const errors = [];
- 
+
       for (const [index, proj] of projectArray.entries()) {
         const {
           projectId,
@@ -15,9 +15,9 @@ const projectController = {
           status,
           inactiveReason,
         } = proj;
- 
+
         // ✅ Validation
-        if (!projectName || !languageId || !status) {
+        if (!projectName || !languageId) {
           errors.push({
             index,
             error: "Project Name, Language, and Status are required.",
@@ -25,7 +25,7 @@ const projectController = {
           });
           continue;
         }
- 
+
         try {
           const result = await projectService.insertOrUpdateProject({
             projectId: projectId || 0,
@@ -35,7 +35,7 @@ const projectController = {
             status,
             inactiveReason: inactiveReason || "",
           });
- 
+
           if (!result || !result.success) {
             errors.push({
               index,
@@ -44,7 +44,7 @@ const projectController = {
             });
             continue;
           }
- 
+
           results.push({ ...proj, dbMessage: result.message });
         } catch (err) {
           errors.push({
@@ -54,7 +54,7 @@ const projectController = {
           });
         }
       }
- 
+
       // ✅ Final Response
       res.status(errors.length ? 207 : 201).json({
         success: errors.length === 0,
@@ -80,5 +80,5 @@ const projectController = {
     }
   },
 };
- 
+
 export default projectController;

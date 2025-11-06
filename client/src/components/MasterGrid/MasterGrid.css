@@ -1,0 +1,20 @@
+.master-grid-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.master-grid-card table {
+  font-size: 14px;
+}
+
+.master-grid-card th {
+  background-color: #007bff !important;
+  color: #fff;
+  text-transform: capitalize;
+}
+
+.master-grid-card td {
+  color: #333;
+}

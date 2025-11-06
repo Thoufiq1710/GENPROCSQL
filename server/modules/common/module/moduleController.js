@@ -6,7 +6,7 @@ const moduleController = {
       const moduleArray = Array.isArray(req.body) ? req.body : [req.body];
       const results = [];
       const errors = [];
- 
+
       for (const [index, mod] of moduleArray.entries()) {
         const {
           moduleId,
@@ -17,9 +17,9 @@ const moduleController = {
           status,
           inactiveReason,
         } = mod;
- 
+
         // Basic validation
-        if (!moduleName || !projectId || !status) {
+        if (!moduleName || !projectId) {
           errors.push({
             index,
             error: "Project ID, Module Name, and Status are required.",
@@ -27,7 +27,7 @@ const moduleController = {
           });
           continue;
         }
- 
+
         try {
           const result = await moduleService.insertOrUpdateModule({
             moduleId: moduleId || 0,
@@ -38,7 +38,7 @@ const moduleController = {
             status,
             inactiveReason: inactiveReason || "",
           });
- 
+
           if (!result || !result.success) {
             errors.push({
               index,
@@ -47,7 +47,7 @@ const moduleController = {
             });
             continue;
           }
- 
+
           results.push({ ...mod, dbMessage: result.message });
         } catch (err) {
           errors.push({
@@ -57,7 +57,7 @@ const moduleController = {
           });
         }
       }
- 
+
       // Final consolidated response
       res.status(errors.length ? 207 : 201).json({
         success: errors.length === 0,
@@ -83,5 +83,5 @@ const moduleController = {
     }
   },
 };
- 
+
 export default moduleController;

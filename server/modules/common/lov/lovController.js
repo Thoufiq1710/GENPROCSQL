@@ -4,10 +4,10 @@ const lovController = {
     try {
       // ✅ Support both array or single object
       const lovArray = Array.isArray(req.body) ? req.body : [req.body];
- 
+
       const results = [];
       const errors = [];
- 
+
       for (const [index, lov] of lovArray.entries()) {
         const {
           lovId,
@@ -17,9 +17,9 @@ const lovController = {
           status,
           inactiveReason,
         } = lov;
- 
+
         // ✅ Basic validation
-        if (!lovName || !status) {
+        if (!lovName) {
           errors.push({
             index,
             error: "LOV Name and Status are required.",
@@ -27,7 +27,7 @@ const lovController = {
           });
           continue;
         }
- 
+
         try {
           // ✅ Call service
           const result = await lovService.insertOrUpdateLov({
@@ -38,7 +38,7 @@ const lovController = {
             status,
             inactiveReason: inactiveReason || "",
           });
- 
+
           // ✅ Handle SP result
           if (!result || !result.success) {
             errors.push({
@@ -48,13 +48,13 @@ const lovController = {
             });
             continue;
           }
- 
+
           results.push({ ...lov, dbMessage: result.message });
         } catch (err) {
           errors.push({ index, error: err.message, lov });
         }
       }
- 
+
       // ✅ Final response
       res.status(errors.length ? 207 : 201).json({
         success: errors.length === 0,
@@ -80,5 +80,5 @@ const lovController = {
     }
   },
 };
- 
+
 export default lovController;

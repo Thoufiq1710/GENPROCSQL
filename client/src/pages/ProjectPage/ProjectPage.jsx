@@ -3,7 +3,9 @@ import axiosClient from "../../api/axiosClient";
 import Header from "../../components/Header/Header";
 import LeftTabMenu from "../../components/LeftTabMenu/LeftTabMenu";
 import TabMenu from "../../components/Tabs/TabMenu";
+import MasterGrid from "../../components/MasterGrid/MasterGrid";
 import FormGrid from "../../components/FormGrid/FormGrid";
+import Toaster from "../../components/Toaster/Toaster";
 import { Container, Row, Col } from "react-bootstrap";
 import "../Style.css";
 
@@ -11,27 +13,52 @@ const ProjectPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverResponse, setServerResponse] = useState(null);
   const [activeTab, setActiveTab] = useState("master");
+  const [gridData, setGridData] = useState([]);
+  const [error, setError] = useState("");
+  const [editRow, setEditRow] = useState(null);
+  const [toastData, setToastData] = useState([]);
   const [languageOptions, setLanguageOptions] = useState([]);
 
-  // ✅ Fetch Dropdown Data (Language List)
-  useEffect(() => {
-    const fetchLanguages = async () => {
-      try {
-        const res = await axiosClient.get("/common/drop-down/LANGUAGE/NULL");
-        if (res.data?.result && Array.isArray(res.data.result)) {
-          const formatted = res.data.result.map((item) => ({
-            label: item.Name,
-            value: item.Id,
-          }));
-          setLanguageOptions(formatted);
-          console.log("Fetched language options:", formatted);
-        } else {
-          console.warn("Invalid response structure:", res.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch dropdown list:", err);
+  // Fetch Dropdown Data (Language List)
+  const fetchLanguages = async () => {
+    try {
+      const res = await axiosClient.get("/common/drop-down/LANGUAGE/NULL");
+      if (res.data?.result && Array.isArray(res.data.result)) {
+        const formatted = res.data.result.map((item) => ({
+          label: item.Name,
+          value: item.Id,
+        }));
+        setLanguageOptions(formatted);
+        console.log("Fetched language options:", formatted);
+      } else {
+        console.warn("Invalid response structure:", res.data);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch dropdown list:", err);
+    }
+  };
+
+  // Fetch Project Master Grid
+  const fetchMasterGrid = async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const res = await axiosClient.get("/common/master-grid/DCS_M_PROJECT");
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setGridData(res.data.data);
+      } else {
+        setError("Invalid response format.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch master grid data.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMasterGrid();
     fetchLanguages();
   }, []);
 
@@ -86,18 +113,76 @@ const ProjectPage = () => {
     setIsLoading(true);
     setServerResponse(null);
     try {
-      const payload = rows.map((r) => ({ ...r, projectId: 0 }));
+      const payload = rows.map((r) => ({
+        ...r,
+        projectId: editRow?.projectId || 0,
+      }));
+
       const res = await axiosClient.post("/common/project/names", payload);
-      setServerResponse(res.data);
+      const data = res.data;
+      setServerResponse(data);
+
+      if (data.success && !data.failedProjects?.length) {
+        setToastData([
+          {
+            text: data.message || "Project saved successfully.",
+            variant: "success",
+          },
+        ]);
+        await fetchMasterGrid();
+        setEditRow(null);
+        setActiveTab("master");
+        return;
+      }
+
+      if (data.failedProjects?.length > 0) {
+        const summaryToast = {
+          text: `${data.message} — Total: ${data.summary.total}, Inserted: ${data.summary.inserted}, Failed: ${data.summary.failed}`,
+          variant: "warning",
+        };
+
+        const failedToasts = data.failedProjects.map((f) => ({
+          text: `❌ ${f.project.projectName}: ${f.error}`,
+          variant: "danger",
+        }));
+
+        setToastData([summaryToast, ...failedToasts]);
+        return;
+      }
+
+      setToastData([
+        { text: data.message || "Unexpected response.", variant: "warning" },
+      ]);
     } catch (err) {
-      setServerResponse({
-        success: false,
-        message:
-          err.response?.data?.message || "Error submitting project data.",
-      });
+      console.error(err);
+      setToastData([
+        {
+          text: err.response?.data?.message || "Error submitting project data.",
+          variant: "danger",
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // ✅ Edit Handler
+  const handleEdit = (rowData) => {
+    console.log("Edit Row State:", rowData);
+    const mappedRow = {
+      projectId: rowData.PROJECT_ID || 0,
+      projectName: rowData.PROJECT_NAME || "",
+      languageId: rowData.Language_ID || "",
+      inactiveReason: rowData.C2C_Inactive_Reason || "",
+      status: rowData.C2C_Status === 1,
+      createdUser: rowData.Created_By || 1,
+      createdDate: rowData.Created_Date || "",
+    };
+
+    console.log("Editing Row Data:", mappedRow);
+    setEditRow(mappedRow);
+    setActiveTab("insert");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -126,16 +211,25 @@ const ProjectPage = () => {
                     onSubmit={handleFormSubmit}
                     isLoading={isLoading}
                     serverResponse={serverResponse}
+                    defaultValues={editRow}
                   />
                 </div>
               ) : (
-                <div className="empty-grid">
-                  Master Grid will be displayed here.
-                </div>
+                <MasterGrid
+                  title="Project Master Grid"
+                  data={gridData}
+                  isLoading={isLoading}
+                  error={error}
+                  moduleName="ProjectMaster"
+                  onEdit={handleEdit}
+                />
               )}
             </Col>
           </Row>
         </Container>
+
+        {/* Toast Notifications */}
+        <Toaster toastData={toastData} setToastData={setToastData} />
       </main>
     </div>
   );

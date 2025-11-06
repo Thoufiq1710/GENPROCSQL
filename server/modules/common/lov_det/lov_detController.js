@@ -19,7 +19,7 @@ const listOfValuesDetailsController = {
         } = item;
 
         // ✅ Validation
-        if (!lovId || !lovDetName || !status) {
+        if (!lovId || !lovDetName) {
           errors.push({
             index,
             error: "LOV ID, Detail Name, and Status are required.",
