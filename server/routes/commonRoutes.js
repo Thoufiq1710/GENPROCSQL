@@ -10,6 +10,7 @@ import projectRoutes from "../modules/common/project/projectRoutes.js";
 import dbConnectionRoutes from "../modules/common/dbConnection/dbConnectionRoutes.js";
 import dropDownRoutes from "../modules/common/dropDowm/dropDownRoutes.js";
 import masterGridRoutes from "../modules/common/masterGrid/masterGridRoutes.js";
+import errorMessageRoutes from "../modules/common/errorMessage/errorMessageRoutes.js";
 
 // ✅ Use routes with base paths
 router.use("/language", languageRoutes);
@@ -20,5 +21,6 @@ router.use("/project", projectRoutes);
 router.use("/dbConnection", dbConnectionRoutes);
 router.use("/drop-down", dropDownRoutes);
 router.use("/master-grid", masterGridRoutes);
+router.use("/error-msg", errorMessageRoutes);
 
 export default router;

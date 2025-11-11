@@ -42,7 +42,9 @@ const ModulePage = () => {
     setIsLoading(true);
     setError("");
     try {
-      const res = await axiosClient.get("/common/master-grid/DCS_M_MODULE");
+      const res = await axiosClient.get(
+        "/common/master-grid/DCS_M_MODULE/null"
+      );
       if (res.data?.success && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
       } else {
@@ -175,24 +177,48 @@ const ModulePage = () => {
   };
 
   //  Edit Handler
-  const handleEdit = (rowData) => {
-    const mappedRow = {
-      moduleId: rowData.MODULE_ID || 0,
-      moduleName: rowData.MODULE_NAME,
-      moduleDes: rowData.MODULE_DES || "",
-      projectId: rowData.PROJECT_ID || "",
-      inactiveReason: rowData.C2C_Inactive_Reason || "",
-      status: rowData.C2C_Status === 1,
-      createdBy: rowData.Created_By || 1,
-      createdDate: rowData.Created_Date || "",
-    };
+  const handleEdit = async (rowData) => {
+    try {
+      const id = rowData.MODULE_ID;
+      if (!id) {
+        console.error("Invalid MODULE_ID for editing:", rowData);
+        return;
+      }
+      setIsLoading(true);
 
-    
-    setEditRow(mappedRow);
-    setActiveTab("insert");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+      const res = await axiosClient.get(
+        `/common/master-grid/editbind/DCS_M_MODULE/${id}`
+      );
+
+      if (res.data?.success && res.data?.data.length > 0) {
+        const record = res.data.data[0];
+
+        const mappedRow = {
+          moduleId: record.MODULE_ID || 0,
+          moduleName: record.MODULE_NAME,
+          moduleDes: record.MODULE_DES || "",
+          projectId: record.PROJECT_ID || "",
+          inactiveReason: record.C2C_Inactive_Reason || "",
+          status: record.C2C_Status === 1,
+          createdUser: record.C2C_Cuser || 1,
+          createdDate: record.C2C_Cdate || "",
+        };
+
+        console.log("Fetched Edit Data:", mappedRow);
+
+        setEditRow(mappedRow);
+        setActiveTab("insert");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        setError("No data found for the selected module record.");
+      }
+    } catch (error) {
+      console.error("Edit fetch failed:", err);
+      setError("Failed to fetch record for editing.");
+    } finally {
+      setIsLoading(false);
+    }
   };
-
   return (
     <div className="master-page">
       {/* Sidebar */}

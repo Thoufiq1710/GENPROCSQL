@@ -13,6 +13,7 @@ import {
 } from "react-bootstrap";
 import { Trash } from "react-bootstrap-icons"; // 🗑️ Optional Bootstrap icon
 import "./FormGrid.css";
+import Select from "react-select";
 
 const FormGrid = ({
   title,
@@ -23,6 +24,7 @@ const FormGrid = ({
   defaultValues,
 }) => {
   const [rows, setRows] = useState([]);
+  const [errors, setErrors] = useState([]);
 
   // 🧩 Helper to create an empty row
   const createEmptyRow = () => {
@@ -34,6 +36,12 @@ const FormGrid = ({
           case "createdUser":
             return [f.name, 1];
           default:
+            if (f.type === "select") {
+              // Set first option or 0 as default
+              const firstValue =
+                f.options?.[0]?.value !== undefined ? f.options[0].value : 0;
+              return [f.name, firstValue];
+            }
             return [f.name, f.type === "checkbox" ? false : ""];
         }
       })
@@ -68,17 +76,41 @@ const FormGrid = ({
   // ✅ Submit
   const handleSubmit = (e) => {
     e.preventDefault();
+    const newErrors = [];
 
-    // --- Basic validation check ---
-    for (const [rowIndex, row] of rows.entries()) {
-      for (const f of fields) {
-        if (f.required && !row[f.name]?.toString().trim()) {
-          alert(`Please fill "${f.label}" in row ${rowIndex + 1}.`);
-          return; // stop submission
+    rows.forEach((row, rowIndex) => {
+      fields.forEach((f) => {
+        if (f.required && !f.hidden) {
+          const value = row[f.name];
+          let isInvalid = false;
+
+          if (f.type === "select") {
+            isInvalid =
+              value === 0 ||
+              value === "" ||
+              value === null ||
+              value === undefined;
+          } else {
+            isInvalid =
+              value === "" ||
+              value === null ||
+              (typeof value === "string" && !value.trim());
+          }
+
+          if (isInvalid) {
+            newErrors.push({ row: rowIndex, field: f.name });
+          }
         }
-      }
+      });
+    });
+
+    if (newErrors.length > 0) {
+      setErrors(newErrors);
+      alert("Please fill all required fields before submitting.");
+      return;
     }
 
+    setErrors([]);
     onSubmit?.(rows);
   };
 
@@ -144,22 +176,77 @@ const FormGrid = ({
                                   />
                                 ) : f.type === "select" ? (
                                   // Dropdown
-                                  <Form.Select
-                                    value={row[f.name]}
-                                    onChange={(e) =>
-                                      handleChange(i, f.name, e.target.value)
+                                  <Select
+                                    options={f.options || []}
+                                    value={
+                                      (f.options || []).find(
+                                        (opt) =>
+                                          String(opt.value) ===
+                                          String(row[f.name] ?? 0)
+                                      ) || (f.options ? f.options[0] : null)
                                     }
-                                    required={f.required}
-                                  >
-                                    {(f.options || []).map((opt, idx) => (
-                                      <option
-                                        key={`${f.name}-${idx}`}
-                                        value={opt.value}
-                                      >
-                                        {opt.label}
-                                      </option>
-                                    ))}
-                                  </Form.Select>
+                                    onChange={(selected) =>
+                                      handleChange(
+                                        i,
+                                        f.name,
+                                        selected ? selected.value : 0
+                                      )
+                                    }
+                                    menuPortalTarget={document.body}
+                                    styles={{
+                                      control: (base, state) => ({
+                                        ...base,
+                                        minHeight: 38,
+                                        fontSize: "0.9rem",
+                                        borderColor: errors.some(
+                                          (err) =>
+                                            err.row === i &&
+                                            err.field === f.name
+                                        )
+                                          ? "red"
+                                          : state.isFocused
+                                          ? "#4f9dff"
+                                          : "#ced4da",
+                                        boxShadow: state.isFocused
+                                          ? "0 0 0 0.2rem rgba(79,157,255,0.25)"
+                                          : "none",
+                                        "&:hover": {
+                                          borderColor: errors.some(
+                                            (err) =>
+                                              err.row === i &&
+                                              err.field === f.name
+                                          )
+                                            ? "red"
+                                            : "#4f9dff",
+                                        },
+                                        width: "100%",
+                                      }),
+                                      menuPortal: (base) => ({
+                                        ...base,
+                                        zIndex: 9999,
+                                        fontSize: "1rem",
+                                      }),
+                                      menu: (base) => ({
+                                        ...base,
+                                        zIndex: 99999,
+                                        fontSize: "1rem",
+                                        width: "max-content", // ✅ adjust to longest option
+                                        minWidth: "100%",
+                                      }),
+                                      menuList: (base) => ({
+                                        ...base,
+                                        maxHeight: 180,
+                                        fontSize: "1rem",
+                                      }),
+                                      option: (base, state) => ({
+                                        ...base,
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        fontSize: "0.9rem",
+                                      }),
+                                    }}
+                                  />
                                 ) : f.type === "textarea" ? (
                                   // Textarea
                                   <Form.Control
@@ -169,6 +256,14 @@ const FormGrid = ({
                                     onChange={(e) =>
                                       handleChange(i, f.name, e.target.value)
                                     }
+                                    style={{
+                                      borderColor: errors.some(
+                                        (err) =>
+                                          err.row === i && err.field === f.name
+                                      )
+                                        ? "red"
+                                        : undefined,
+                                    }}
                                     disabled={
                                       f.name === "inactiveReason" && row.status
                                     }

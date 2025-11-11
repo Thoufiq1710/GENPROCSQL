@@ -22,7 +22,7 @@ const listOfValuesDetailsController = {
         if (!lovId || !lovDetName) {
           errors.push({
             index,
-            error: "LOV ID, Detail Name, and Status are required.",
+            error: "LOV ID, Detail Name are required.",
             record: item,
           });
           continue;
@@ -54,7 +54,6 @@ const listOfValuesDetailsController = {
           errors.push({ index, error: err.message, record: item });
         }
       }
-
       // ✅ Consolidated Response
       res.status(errors.length ? 207 : 201).json({
         success: errors.length === 0,

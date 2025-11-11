@@ -9,8 +9,9 @@ import LanguagePage from "./pages/LanguagePage/LanguagePage.jsx";
 import ProjectPage from "./pages/ProjectPage/ProjectPage.jsx";
 import ModulePage from "./pages/ModulePage/ModulePage.jsx";
 import DbConnectionPage from "./pages/DbConnectionPage/DbConnectionPage.jsx";
-import LovPage from "./pages/LOVPage/LOVPage.jsx";
+import LovPage from "./pages/LovPage/LovPage.jsx";
 import LovDetailsPage from "./pages/LovDetailsPage/LovDetailsPage.jsx";
+import ErrorMsgPage from "./pages/ErrorMsg/ErrorMsgPage.jsx";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/dbconnect" element={<DbConnectionPage />} />
         <Route path="/lov" element={<LovPage />} />
         <Route path="/lov-det" element={<LovDetailsPage />} />
+        <Route path="/err-msg" element={<ErrorMsgPage />} />
       </Routes>
     </Router>
   );

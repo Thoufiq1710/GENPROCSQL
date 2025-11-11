@@ -43,7 +43,9 @@ const ProjectPage = () => {
     setIsLoading(true);
     setError("");
     try {
-      const res = await axiosClient.get("/common/master-grid/DCS_M_PROJECT");
+      const res = await axiosClient.get(
+        "/common/master-grid/DCS_M_PROJECT/null"
+      );
       if (res.data?.success && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
       } else {
@@ -62,6 +64,7 @@ const ProjectPage = () => {
     fetchLanguages();
   }, []);
 
+  console.log("Language Options:", languageOptions);
   // ✅ Project Form Fields
   const fields = [
     {
@@ -167,22 +170,46 @@ const ProjectPage = () => {
   };
 
   // ✅ Edit Handler
-  const handleEdit = (rowData) => {
-    console.log("Edit Row State:", rowData);
-    const mappedRow = {
-      projectId: rowData.PROJECT_ID || 0,
-      projectName: rowData.PROJECT_NAME || "",
-      languageId: rowData.Language_ID || "",
-      inactiveReason: rowData.C2C_Inactive_Reason || "",
-      status: rowData.C2C_Status === 1,
-      createdUser: rowData.Created_By || 1,
-      createdDate: rowData.Created_Date || "",
-    };
+  const handleEdit = async (rowData) => {
+    try {
+      const id = rowData.PROJECT_ID;
+      if (!id) {
+        console.error("Invalid PROJECT_ID for editing:", rowData);
+        return;
+      }
+      setIsLoading(true);
 
-    console.log("Editing Row Data:", mappedRow);
-    setEditRow(mappedRow);
-    setActiveTab("insert");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+      const res = await axiosClient.get(
+        `/common/master-grid/editbind/DCS_M_PROJECT/${id}`
+      );
+
+      if (res.data?.success && res.data?.data.length > 0) {
+        const record = res.data.data[0];
+        console.log("Fetched Edit Record:", record);
+        const mappedRow = {
+          projectId: record.PROJECT_ID || 0,
+          projectName: record.PROJECT_NAME || "",
+          languageId: record.Language_ID || "",
+          inactiveReason: record.C2C_Inactive_Reason || "",
+          status: record.C2C_Status === 1,
+          createdUser: record.C2C_Cuser || 1,
+          createdDate: record.C2C_Cdate || "",
+        };
+
+        console.log("Fetched Edit Data:", mappedRow);
+
+        setEditRow(mappedRow);
+        setActiveTab("insert");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        setError("No data found for the selected project record.");
+      }
+    } catch (error) {
+      console.error("Edit fetch failed:", err);
+      setError("Failed to fetch record for editing.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

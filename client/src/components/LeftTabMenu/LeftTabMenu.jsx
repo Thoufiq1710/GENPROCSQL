@@ -12,6 +12,7 @@ function LeftTabMenu() {
     { path: "/dbconnect", icon: "🗄️", label: "Db Connection" },
     { path: "/lov", icon: "📋", label: "List of Values" },
     { path: "/lov-det", icon: "🔍", label: "List of Values Details" },
+    { path: "/err-msg", icon: "❗", label: "Error Messages" },
   ];
 
   return (

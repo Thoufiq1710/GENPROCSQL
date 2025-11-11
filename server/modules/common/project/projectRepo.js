@@ -27,6 +27,7 @@ const projectRepo = {
       const [resultRows] = await pool.query(
         "SELECT @p_LogicApps_Result AS message;"
       );
+      console.log("Stored Procedure Result:", resultRows);
       const message = resultRows?.[0]?.message || "Unknown response";
 
       const isError =

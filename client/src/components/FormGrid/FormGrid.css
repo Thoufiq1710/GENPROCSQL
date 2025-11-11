@@ -32,3 +32,113 @@ form {
   align-items: center;
   justify-content: center;
 }
+.table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Ensure consistent height and no overflow inside dropdown cells */
+.table td .css-13cymwt-control,
+.table td .css-t3ipsp-control {
+  height: 38px !important;
+  font-size: 0.9rem !important;
+  min-height: 38px !important;
+  width: 160px !important; /* ✅ fixed width for alignment */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Dropdown menu should appear on top of table */
+.react-select__menu {
+  z-index: 9999 !important;
+}
+
+/* Ensure dropdown options are not too wide */
+.react-select__menu-list {
+  max-height: 180px !important;
+  font-size: 0.9rem !important;
+  overflow-y: auto !important;
+  width: 160px !important; /* ✅ match control width */
+}
+
+/* Prevent long text from stretching the cell */
+.table td {
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Auto-fit dropdown to its cell width */
+.table td .css-13cymwt-control,
+.table td .css-t3ipsp-control {
+  height: 38px !important;
+  font-size: 0.9rem !important;
+  min-height: 38px !important;
+  width: 100% !important; /* ✅ Fills the full cell width */
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Dropdown menu should match the same width as cell */
+.react-select__menu {
+  z-index: 9999 !important;
+  width: 100% !important; /* ✅ match column width */
+}
+
+/* Keep dropdown list tidy */
+.react-select__menu-list {
+  max-height: 180px !important;
+  font-size: 0.9rem !important;
+  overflow-y: auto !important;
+}
+
+/* Prevent column expansion */
+.table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table td {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+/* Ensure dropdown appears fully and not clipped */
+.table {
+  table-layout: fixed;
+  width: 100%;
+  overflow: visible !important; /* ✅ allow dropdown to overflow */
+}
+
+/* Parent containers shouldn't clip dropdown */
+.card,
+.table-responsive,
+form {
+  overflow: visible !important;
+}
+
+/* Make sure React-Select menus are fully visible */
+.react-select__menu {
+  z-index: 99999 !important; /* on top of table */
+  position: absolute !important; /* escape cell boundary */
+  width: max-content !important; /* ✅ expand to fit longest option */
+  min-width: 100% !important; /* at least as wide as cell */
+  font-size: 1rem !important;
+}
+
+/* Dropdown options text visible and readable */
+.react-select__menu-list {
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  white-space: nowrap !important;
+}
+
+.react-select__option {
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  font-size: 1rem !important;
+}

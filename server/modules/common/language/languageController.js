@@ -64,9 +64,6 @@ const languageController = {
         }
       }
 
-      console.log(results);
-      console.log(errors);
-
       // ✅ Consolidated Response
       res.status(errors.length ? 207 : 201).json({
         success: errors.length === 0,
