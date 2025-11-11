@@ -20,7 +20,7 @@ const projectController = {
         if (!projectName || !languageId) {
           errors.push({
             index,
-            error: "Project Name, Language, and Status are required.",
+            error: "Project Name, Language are required.",
             project: proj,
           });
           continue;

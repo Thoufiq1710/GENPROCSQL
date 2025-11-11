@@ -10,4 +10,5 @@ export const hiddenColumns = {
     "C2C_Status",
   ],
   LovDetailsMaster: ["LOV_DET_ID", "Created_Date", "Created_By", "C2C_Status"],
+  ErrorMsgMaster: ["ERROR_ID","ERROR_PREFIX_ID", "Created_Date", "Created_By", "C2C_Status"],
 };

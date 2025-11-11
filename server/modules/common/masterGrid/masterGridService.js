@@ -24,6 +24,22 @@ const masterGridService = {
       };
     }
   },
+  editBindMasterGrid: async (params) => {
+    try {
+      const { tableName, id } = params;
+
+      // Call Repository
+      const result = await masterGridRepo.editBindMasterGrid(tableName, id);
+      return result;
+    } catch (err) {
+      console.error("❌ Service Error (editBindMasterGrid):", err.message);
+      return {
+        success: false,
+        message: "Error processing edit bind master grid in service layer.",
+        error: err.message,
+      };
+    }
+  },
 };
 
 export default masterGridService;

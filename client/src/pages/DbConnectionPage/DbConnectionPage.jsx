@@ -44,7 +44,7 @@ const DbConnectionPage = () => {
     setError("");
     try {
       const res = await axiosClient.get(
-        "/common/master-grid/DCS_M_DB_CONNECTION"
+        "/common/master-grid/DCS_M_DB_CONNECTION/null"
       );
       if (res.data?.success && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
@@ -63,7 +63,7 @@ const DbConnectionPage = () => {
     fetchProjects();
     fetchMasterGrid();
   }, []);
-
+  console.log("Project Options:", projectOptions);
   //  DB Connection Form Fields
   const fields = [
     {
@@ -198,24 +198,50 @@ const DbConnectionPage = () => {
   };
 
   //  Edit Handler
-  const handleEdit = (rowData) => {
-    const mappedRow = {
-      dbConnectionId: rowData.DB_CONNECTION_ID || 0,
-      dbName: rowData.DB_NAME || "",
-      serverName: rowData.SERVER_NAME || "",
-      userName: rowData.USER_NAME || "",
-      password: rowData.PASSWORD || "",
-      projectId: rowData.PROJECT_ID || "",
-      companyName: rowData.COMPANY_NAME || "",
-      status: rowData.C2C_Status === 1,
-      inactiveReason: rowData.C2C_Inactive_Reason || "",
-      createdUser: rowData.Created_By || 1,
-      createdDate: rowData.Created_Date || "",
-    };
+  const handleEdit = async (rowData) => {
+    try {
+      const id = rowData.DB_CONNECTION_ID;
+      if (!id) {
+        console.error("Invalid DB_CONNECTION_ID for editing:", rowData);
+        return;
+      }
+      setIsLoading(true);
 
-    setEditRow(mappedRow);
-    setActiveTab("insert");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+      const res = await axiosClient.get(
+        `/common/master-grid/editbind/DCS_M_DB_CONNECTION/${id}`
+      );
+
+      if (res.data?.success && res.data?.data.length > 0) {
+        const record = res.data.data[0];
+
+        const mappedRow = {
+          dbConnectionId: record.DB_CONNECTION_ID || 0,
+          dbName: record.DB_NAME || "",
+          serverName: record.SERVER_NAME || "",
+          userName: record.USER_NAME || "",
+          password: record.PASSWORD || "",
+          projectId: record.PROJECT_ID || "",
+          companyName: record.COMPANY_NAME || "",
+          status: record.C2C_Status === 1,
+          inactiveReason: record.C2C_Inactive_Reason || "",
+          createdUser: record.C2C_Cuser || 1,
+          createdDate: record.C2C_Cdate || "",
+        };
+
+        console.log("Fetched Edit Data:", mappedRow);
+
+        setEditRow(mappedRow);
+        setActiveTab("insert");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        setError("No data found for the selected DB_CONNECTION record.");
+      }
+    } catch (error) {
+      console.error("Edit fetch failed:", err);
+      setError("Failed to fetch record for editing.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
