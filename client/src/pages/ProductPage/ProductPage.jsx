@@ -9,7 +9,7 @@ import Toaster from "../../components/Toaster/Toaster";
 import { Container, Row, Col } from "react-bootstrap";
 import "../Style.css";
 
-const LovPage = () => {
+const ProductPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverResponse, setServerResponse] = useState(null);
   const [activeTab, setActiveTab] = useState("master");
@@ -17,22 +17,42 @@ const LovPage = () => {
   const [error, setError] = useState("");
   const [editRow, setEditRow] = useState(null);
   const [toastData, setToastData] = useState([]);
+  const [projectOptions, setProjectOptions] = useState([]);
 
+  // 🔹 Fetch Project List for dropdown
+  const fetchProjects = async () => {
+    try {
+      const res = await axiosClient.get("/common/drop-down/PROJECT/NULL");
+      if (res.data?.result && Array.isArray(res.data.result)) {
+        const formatted = res.data.result.map((item) => ({
+          label: item.Name,
+          value: item.Id,
+        }));
+        setProjectOptions(formatted);
+      } else {
+        console.warn("Invalid response structure:", res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch project list:", err);
+    }
+  };
+
+  // 🔹 Fetch Product master grid
   const fetchMasterGrid = async () => {
     setIsLoading(true);
     setError("");
     try {
       const res = await axiosClient.get(
-        "/common/master-grid/DCS_M_LIST_OF_VALUES/null"
+        "/common/master-grid/DCS_M_PRODUCT/null"
       );
       if (res.data?.success && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
       } else {
-        setError("Invalid response format.");
+        setError("Invalid response format from product API.");
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch LOV master grid data.");
+      setError("Failed to fetch product data.");
     } finally {
       setIsLoading(false);
     }
@@ -40,28 +60,42 @@ const LovPage = () => {
 
   useEffect(() => {
     fetchMasterGrid();
+    fetchProjects();
   }, []);
-
-  //  LOV Form Fields
+  console.log("Project options:", gridData);
+  // 🔹 Product Form Fields
   const fields = [
     {
-      name: "lovName",
-      label: "LOV Name",
-      type: "text",
+      name: "projectId",
+      label: "Project",
+      type: "select",
       required: true,
+      options: projectOptions,
       validate: (value) => {
-        if (!value?.trim()) return "LOV name is required";
-        if (!/^[A-Za-z0-9\s._-]+$/.test(value))
-          return "LOV name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
-        if (value.length < 2)
-          return "LOV name must be at least 2 characters long";
-        if (value.length > 100) return "LOV name cannot exceed 100 characters";
+        if (!value || value === "0" || value === 0)
+          return "Please select a project";
         return true;
       },
     },
     {
-      name: "lovDescription",
-      label: "LOV Description",
+      name: "productName",
+      label: "Product Name",
+      type: "text",
+      required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Product name is required";
+        if (!/^[A-Za-z0-9\s._-]+$/.test(value))
+          return "Product name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
+        if (value.length < 3)
+          return "Product name must be at least 3 characters long";
+        if (value.length > 100)
+          return "Product name cannot exceed 100 characters";
+        return true;
+      },
+    },
+    {
+      name: "productDescription",
+      label: "Product Description",
       type: "textarea",
       required: false,
       validate: (value) => {
@@ -86,7 +120,7 @@ const LovPage = () => {
       validate: (value, row) => {
         if (row.status === false) {
           if (!value?.trim())
-            return "Inactive reason is required when status is inactive";
+            return "Inactive reason is required when product is inactive";
           if (value.length < 5)
             return "Inactive reason must be at least 5 characters long";
         }
@@ -101,7 +135,7 @@ const LovPage = () => {
     },
   ];
 
-  // Tabs Configuration
+  // 🔹 Tabs Configuration
   const tabs = [
     {
       key: "master",
@@ -111,30 +145,30 @@ const LovPage = () => {
     },
     {
       key: "insert",
-      label: "Insert LOV",
+      label: "Insert Product",
       onClick: (key) => setActiveTab(key),
       active: activeTab === "insert",
     },
   ];
 
-  // Submit Handler
+  // 🔹 Submit Handler
   const handleFormSubmit = async (rows) => {
     setIsLoading(true);
     setServerResponse(null);
     try {
       const payload = rows.map((r) => ({
         ...r,
-        lovId: editRow?.lovId || 0, // new or edit
+        productId: editRow?.productId || 0, // update if editing
       }));
 
-      const res = await axiosClient.post("/common/lov/names", payload);
+      const res = await axiosClient.post("/api/common/product/names", payload);
       const data = res.data;
       setServerResponse(data);
 
-      if (data.success && !data.failedLOVs?.length) {
+      if (data.success && !data.failedProducts?.length) {
         setToastData([
           {
-            text: data.message || "LOV saved successfully.",
+            text: data.message || "Product saved successfully.",
             variant: "success",
           },
         ]);
@@ -144,17 +178,15 @@ const LovPage = () => {
         return;
       }
 
-      if (data.failedLOVs?.length > 0) {
+      if (data.failedProducts?.length > 0) {
         const summaryToast = {
           text: `${data.message} — Total: ${data.summary.total}, Inserted: ${data.summary.inserted}, Failed: ${data.summary.failed}`,
           variant: "warning",
         };
-
-        const failedToasts = data.failedLOVs.map((f) => ({
-          text: `❌ ${f.lov.lovName}: ${f.error}`,
+        const failedToasts = data.failedProducts.map((f) => ({
+          text: `❌ ${f.productName}: ${f.error}`,
           variant: "danger",
         }));
-
         setToastData([summaryToast, ...failedToasts]);
         return;
       }
@@ -166,7 +198,7 @@ const LovPage = () => {
       console.error(err);
       setToastData([
         {
-          text: err.response?.data?.message || "Error submitting LOV form.",
+          text: err.response?.data?.message || "Error submitting form.",
           variant: "danger",
         },
       ]);
@@ -175,27 +207,29 @@ const LovPage = () => {
     }
   };
 
-  // ✅ Edit Handler
+  // 🔹 Edit Handler
   const handleEdit = async (rowData) => {
     try {
-      const id = rowData.LOV_ID;
+      console.log("Row data for editing:", rowData);
+      const id = rowData.Product_ID;
       if (!id) {
-        console.error("Invalid LOV_ID for editing:", rowData);
+        console.error("Invalid MODULE_ID for editing:", rowData);
         return;
       }
       setIsLoading(true);
 
       const res = await axiosClient.get(
-        `/common/master-grid/editbind/DCS_M_LIST_OF_VALUES/${id}`
+        `/common/master-grid/editbind/DCS_M_PRODUCT/${id}`
       );
 
       if (res.data?.success && res.data?.data.length > 0) {
         const record = res.data.data[0];
 
         const mappedRow = {
-          lovId: record.LOV_ID || 0,
-          lovName: record.LOV_NAME || "",
-          lovDescription: record.LOV_DESCRIPTION || "",
+          productId: record.Product_ID || 0,
+          productName: record.Product_Name,
+          productDescription: record.Product_Description || "",
+          projectId: record.Project_ID || "",
           inactiveReason: record.C2C_Inactive_Reason || "",
           status: record.C2C_Status === 1,
           createdUser: record.C2C_Cuser || 1,
@@ -208,7 +242,7 @@ const LovPage = () => {
         setActiveTab("insert");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        setError("No data found for the selected LOV record.");
+        setError("No data found for the selected module record.");
       }
     } catch (error) {
       console.error("Edit fetch failed:", err);
@@ -239,7 +273,7 @@ const LovPage = () => {
               {activeTab === "insert" ? (
                 <div className="form-area">
                   <FormGrid
-                    title="LOV Creation"
+                    title="Product Creation"
                     fields={fields}
                     onSubmit={handleFormSubmit}
                     isLoading={isLoading}
@@ -249,21 +283,23 @@ const LovPage = () => {
                 </div>
               ) : (
                 <MasterGrid
-                  title="LOV Master Grid"
+                  title="Product Master Grid"
                   data={gridData}
                   isLoading={isLoading}
                   error={error}
-                  moduleName="LovMaster"
+                  moduleName="ProductMaster"
                   onEdit={handleEdit}
                 />
               )}
             </Col>
           </Row>
         </Container>
+
+        {/* Toast Notification */}
         <Toaster toastData={toastData} setToastData={setToastData} />
       </main>
     </div>
   );
 };
 
-export default LovPage;
+export default ProductPage;

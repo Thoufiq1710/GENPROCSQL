@@ -72,6 +72,16 @@ const ProjectPage = () => {
       label: "Project Name",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Project name is required";
+        if (!/^[A-Za-z0-9\s._-]+$/.test(value))
+          return "Project name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
+        if (value.length < 3)
+          return "Project name must be at least 3 characters long";
+        if (value.length > 100)
+          return "Project name cannot exceed 100 characters";
+        return true;
+      },
     },
     {
       name: "languageId",
@@ -79,6 +89,11 @@ const ProjectPage = () => {
       type: "select",
       required: true,
       options: languageOptions,
+      validate: (value) => {
+        if (!value || value === "0" || value === 0)
+          return "Please select a language";
+        return true;
+      },
     },
     { name: "status", label: "Status", type: "checkbox", required: true },
     {
@@ -86,6 +101,15 @@ const ProjectPage = () => {
       label: "Inactive Reason",
       type: "textarea",
       required: false,
+      validate: (value, row) => {
+        if (row.status === false) {
+          if (!value?.trim())
+            return "Inactive reason is required when project is inactive";
+          if (value.length < 5)
+            return "Inactive reason must be at least 5 characters long";
+        }
+        return true;
+      },
     },
     {
       name: "createdUser",

@@ -71,24 +71,60 @@ const DbConnectionPage = () => {
       label: "Database Name",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Database name is required";
+        if (!/^[A-Za-z0-9_]+$/.test(value))
+          return "Database name can only contain letters, numbers, and underscores";
+        if (value.length < 3)
+          return "Database name must be at least 3 characters";
+        return true;
+      },
     },
     {
       name: "serverName",
       label: "Server Name",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Server name is required";
+        // Allow domain or IP formats
+        if (!/^[A-Za-z0-9.\-_]+$/.test(value))
+          return "Server name can contain letters, numbers, dots, and dashes only";
+        return true;
+      },
     },
     {
       name: "userName",
       label: "Username",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Username is required";
+        if (value.length < 3) return "Username must be at least 3 characters";
+        if (!/^[A-Za-z0-9_.-]+$/.test(value))
+          return "Username can only contain letters, numbers, underscores, dots, and dashes";
+        return true;
+      },
     },
     {
       name: "password",
       label: "Password",
       type: "password",
       required: true,
+      validate: (value) => {
+        if (!value) return "Password is required";
+        if (value.length < 8)
+          return "Password must be at least 8 characters long";
+        if (!/[A-Z]/.test(value))
+          return "Password must contain at least one uppercase letter";
+        if (!/[a-z]/.test(value))
+          return "Password must contain at least one lowercase letter";
+        if (!/[0-9]/.test(value))
+          return "Password must contain at least one number";
+        if (!/[!@#$%^&*]/.test(value))
+          return "Password must contain at least one special character (!@#$%^&*)";
+        return true;
+      },
     },
     {
       name: "projectId",
@@ -96,12 +132,24 @@ const DbConnectionPage = () => {
       type: "select",
       required: true,
       options: projectOptions,
+      validate: (value) => {
+        if (!value || value === "0") return "Project selection is required";
+        return true;
+      },
     },
     {
       name: "companyName",
       label: "Company Name",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Company name is required";
+        if (!/^[A-Za-z0-9\s&.,-]+$/.test(value))
+          return "Company name contains invalid characters";
+        if (value.length < 2)
+          return "Company name must be at least 2 characters long";
+        return true;
+      },
     },
     {
       name: "status",
@@ -114,6 +162,16 @@ const DbConnectionPage = () => {
       label: "Inactive Reason",
       type: "textarea",
       required: false,
+      validate: (value, row) => {
+        // required only if status = false
+        if (row.status === false) {
+          if (!value?.trim())
+            return "Inactive reason is required when status is inactive";
+          if (value.length < 5)
+            return "Inactive reason must be at least 5 characters";
+        }
+        return true;
+      },
     },
     {
       name: "createdUser",

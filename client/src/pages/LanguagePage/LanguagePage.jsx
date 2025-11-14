@@ -48,9 +48,25 @@ const LanguagePage = () => {
       label: "Language Name",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!/^[A-Za-z\s]+$/.test(value))
+          return "Language name must contain only letters";
+        if (value.length < 2)
+          return "Language name must be at least 2 characters";
+        return true;
+      },
     },
     { name: "status", label: "Status", type: "checkbox" },
-    { name: "inactiveReason", label: "Inactive Reason", type: "textarea" },
+    {
+      name: "inactiveReason",
+      label: "Inactive Reason",
+      type: "textarea",
+      validate: (value, row) => {
+        if (row.status === false && !value.trim())
+          return "Inactive reason is required when status is inactive";
+        return true;
+      },
+    },
     {
       name: "createdUser",
       label: "Created User",
