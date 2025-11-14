@@ -48,8 +48,34 @@ const ErrorMsgPage = () => {
   // ✅ Form Fields
   const fields = [
     // { name: "errorPrefixId", label: "Error Prefix ID", type: "text" },
-    { name: "errorMsg", label: "Error Message", type: "text", required: true },
-    { name: "errorCode", label: "Error Code", type: "text", required: true },
+    {
+      name: "errorMsg",
+      label: "Error Message",
+      type: "text",
+      required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Error message is required";
+        if (value.length < 5)
+          return "Error message must be at least 5 characters long";
+        if (!/^[A-Za-z0-9\s.,;:'"!?-]+$/.test(value))
+          return "Error message contains invalid characters";
+        return true;
+      },
+    },
+    {
+      name: "errorCode",
+      label: "Error Code",
+      type: "text",
+      required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Error code is required";
+        if (!/^[A-Z0-9_]+$/.test(value))
+          return "Error code must be uppercase letters, numbers, or underscores only";
+        if (value.length < 3)
+          return "Error code must be at least 3 characters long";
+        return true;
+      },
+    },
     {
       name: "createdUser",
       label: "Created User",
@@ -67,6 +93,16 @@ const ErrorMsgPage = () => {
       label: "Inactive Reason",
       type: "textarea",
       required: false,
+      validate: (value, row) => {
+        // Only required if status = false (unchecked)
+        if (row.status === false) {
+          if (!value?.trim())
+            return "Inactive reason is required when status is inactive";
+          if (value.length < 5)
+            return "Inactive reason must be at least 5 characters long";
+        }
+        return true;
+      },
     },
   ];
 

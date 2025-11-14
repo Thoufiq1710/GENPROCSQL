@@ -71,18 +71,40 @@ const ModulePage = () => {
       type: "select",
       required: true,
       options: projectOptions,
+      validate: (value) => {
+        if (!value || value === "0" || value === 0)
+          return "Please select a project";
+        return true;
+      },
     },
     {
       name: "moduleName",
       label: "Module Name",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Module name is required";
+        if (!/^[A-Za-z0-9\s._-]+$/.test(value))
+          return "Module name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
+        if (value.length < 3)
+          return "Module name must be at least 3 characters long";
+        if (value.length > 100)
+          return "Module name cannot exceed 100 characters";
+        return true;
+      },
     },
     {
       name: "moduleDes",
       label: "Module Description",
       type: "textarea",
       required: false,
+      validate: (value) => {
+        if (value?.trim() && value.length < 5)
+          return "Description must be at least 5 characters long";
+        if (value?.length > 300)
+          return "Description cannot exceed 300 characters";
+        return true;
+      },
     },
     {
       name: "status",
@@ -95,6 +117,15 @@ const ModulePage = () => {
       label: "Inactive Reason",
       type: "textarea",
       required: false,
+      validate: (value, row) => {
+        if (row.status === false) {
+          if (!value?.trim())
+            return "Inactive reason is required when module is inactive";
+          if (value.length < 5)
+            return "Inactive reason must be at least 5 characters long";
+        }
+        return true;
+      },
     },
     {
       name: "createdUser",
