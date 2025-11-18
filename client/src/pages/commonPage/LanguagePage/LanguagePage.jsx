@@ -1,54 +1,34 @@
 import React, { useState, useEffect } from "react";
-import axiosClient from "../../api/axiosClient";
-import Header from "../../components/Header/Header";
-import LeftTabMenu from "../../components/LeftTabMenu/LeftTabMenu";
-import TabMenu from "../../components/Tabs/TabMenu";
-import MasterGrid from "../../components/MasterGrid/MasterGrid";
-import FormGrid from "../../components/FormGrid/FormGrid";
-import Toaster from "../../components/Toaster/Toaster";
+import axiosClient from "../../../api/axiosClient";
+import Header from "../../../components/Header/Header";
+import LeftTabMenu from "../../../components/LeftTabMenu/LeftTabMenu";
+import TabMenu from "../../../components/Tabs/TabMenu";
+import MasterGrid from "../../../components/MasterGrid/MasterGrid";
+import FormGrid from "../../../components/FormGrid/FormGrid";
 import { Container, Row, Col } from "react-bootstrap";
-import "../Style.css";
+import Toaster from "../../../components/Toaster/Toaster";
+import "../../Style.css";
 
-const ModulePage = () => {
+const LanguagePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverResponse, setServerResponse] = useState(null);
   const [activeTab, setActiveTab] = useState("master");
   const [gridData, setGridData] = useState([]);
   const [error, setError] = useState("");
-  const [editRow, setEditRow] = useState(null);
+  const [editRow, setEditRow] = useState(null); //  store row being edited
   const [toastData, setToastData] = useState([]);
-  const [projectOptions, setProjectOptions] = useState([]);
-
-  //  Fetch Project List for Dropdown
-  const fetchProjects = async () => {
-    try {
-      const res = await axiosClient.get("/common/drop-down/PROJECT/NULL");
-      if (res.data?.result && Array.isArray(res.data.result)) {
-        const formatted = res.data.result.map((item) => ({
-          label: item.Name,
-          value: item.Id,
-        }));
-        setProjectOptions(formatted);
-        console.log("Fetched project options:", formatted);
-      } else {
-        console.warn("Invalid response structure:", res.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch project list:", err);
-    }
-  };
 
   const fetchMasterGrid = async () => {
     setIsLoading(true);
     setError("");
     try {
       const res = await axiosClient.get(
-        "/common/master-grid/DCS_M_MODULE/null"
+        "/common/master-grid/DCS_M_LANGUAGE/null"
       );
       if (res.data?.success && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
       } else {
-        setError("Invalid response format from master grid.");
+        setError("Invalid response format.");
       }
     } catch (err) {
       console.error(err);
@@ -60,41 +40,32 @@ const ModulePage = () => {
 
   useEffect(() => {
     fetchMasterGrid();
-    fetchProjects();
   }, []);
 
-  // Module Form Fields
   const fields = [
     {
-      name: "projectId",
-      label: "Project",
-      type: "select",
-      required: true,
-      options: projectOptions,
-    },
-    {
-      name: "moduleName",
-      label: "Module Name",
+      name: "languageName",
+      label: "Language Name",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!/^[A-Za-z\s]+$/.test(value))
+          return "Language name must contain only letters";
+        if (value.length < 2)
+          return "Language name must be at least 2 characters";
+        return true;
+      },
     },
-    {
-      name: "moduleDes",
-      label: "Module Description",
-      type: "textarea",
-      required: false,
-    },
-    {
-      name: "status",
-      label: "Status",
-      type: "checkbox",
-      required: true,
-    },
+    { name: "status", label: "Status", type: "checkbox" },
     {
       name: "inactiveReason",
       label: "Inactive Reason",
       type: "textarea",
-      required: false,
+      validate: (value, row) => {
+        if (row.status === false && !value.trim())
+          return "Inactive reason is required when status is inactive";
+        return true;
+      },
     },
     {
       name: "createdUser",
@@ -104,7 +75,6 @@ const ModulePage = () => {
     },
   ];
 
-  //  Tabs Configuration
   const tabs = [
     {
       key: "master",
@@ -114,48 +84,47 @@ const ModulePage = () => {
     },
     {
       key: "insert",
-      label: "Insert Module",
+      label: "Insert the Language",
       onClick: (key) => setActiveTab(key),
       active: activeTab === "insert",
     },
   ];
 
-  //  Submit Handler
   const handleFormSubmit = async (rows) => {
     setIsLoading(true);
     setServerResponse(null);
     try {
       const payload = rows.map((r) => ({
         ...r,
-        moduleId: editRow?.moduleId || 0, // update if editing
+        languageId: editRow?.languageId || 0, // if editing, send existing ID
       }));
-
-      const res = await axiosClient.post("/common/module/names", payload);
+      const res = await axiosClient.post("/common/language/names", payload);
       const data = res.data;
       setServerResponse(data);
 
-      if (data.success && !data.failedModules?.length) {
+      if (data.success && !data.failedLanguages?.length) {
         setToastData([
           {
-            text: data.message || "Module saved successfully.",
+            text: data.message || "Language saved successfully.",
             variant: "success",
           },
         ]);
-        await fetchMasterGrid();
-        setEditRow(null);
-        setActiveTab("master");
+        await fetchMasterGrid(); //refresh grid instantly
+        setEditRow(null); // reset edit
+        setActiveTab("master"); // switch back to grid
         return;
       }
-
-      if (data.failedModules?.length > 0) {
+      if (data.failedLanguages?.length > 0) {
         const summaryToast = {
           text: `${data.message} — Total: ${data.summary.total}, Inserted: ${data.summary.inserted}, Failed: ${data.summary.failed}`,
           variant: "warning",
         };
-        const failedToasts = data.failedModules.map((f) => ({
-          text: `❌ ${f.module.moduleName}: ${f.error}`,
+
+        const failedToasts = data.failedLanguages.map((f) => ({
+          text: `❌ ${f.language.languageName}: ${f.error}`,
           variant: "danger",
         }));
+
         setToastData([summaryToast, ...failedToasts]);
         return;
       }
@@ -176,97 +145,88 @@ const ModulePage = () => {
     }
   };
 
-  //  Edit Handler
+  //  When user clicks edit in MasterGrid
   const handleEdit = async (rowData) => {
     try {
-      const id = rowData.MODULE_ID;
+      const id = rowData.Language_ID;
       if (!id) {
-        console.error("Invalid MODULE_ID for editing:", rowData);
+        console.error("Invalid Language ID for editing:", rowData);
         return;
       }
       setIsLoading(true);
 
       const res = await axiosClient.get(
-        `/common/master-grid/editbind/DCS_M_MODULE/${id}`
+        `/common/master-grid/editbind/DCS_M_LANGUAGE/${id}`
       );
 
       if (res.data?.success && res.data?.data.length > 0) {
         const record = res.data.data[0];
 
         const mappedRow = {
-          moduleId: record.MODULE_ID || 0,
-          moduleName: record.MODULE_NAME,
-          moduleDes: record.MODULE_DES || "",
-          projectId: record.PROJECT_ID || "",
+          languageId: record.Language_ID || 0,
+          languageName: record.Language_Name || "",
           inactiveReason: record.C2C_Inactive_Reason || "",
-          status: record.C2C_Status === 1,
-          createdUser: record.C2C_Cuser || 1,
+          status: record.C2C_Status === 1, // ✅ converts numeric status to boolean
+          createdBy: record.C2C_Cuser || 1,
           createdDate: record.C2C_Cdate || "",
         };
-
-        console.log("Fetched Edit Data:", mappedRow);
 
         setEditRow(mappedRow);
         setActiveTab("insert");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        setError("No data found for the selected module record.");
+        setError("No data found for the selected record.");
       }
-    } catch (error) {
+    } catch (err) {
       console.error("Edit fetch failed:", err);
       setError("Failed to fetch record for editing.");
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="master-page">
-      {/* Sidebar */}
       <aside className="sidebar">
         <LeftTabMenu />
       </aside>
 
-      {/* Main Area */}
       <main className="main-content">
         <Header />
 
         <Container fluid className="py-4">
-          {/* Tabs */}
           <TabMenu tabs={tabs} variant="tabs" defaultActiveKey="master" />
 
-          {/* Grid / Form */}
           <Row className="mt-4">
             <Col xs={12}>
               {activeTab === "insert" ? (
                 <div className="form-area">
                   <FormGrid
-                    title="Module Creation"
+                    title="Language Creation"
                     fields={fields}
                     onSubmit={handleFormSubmit}
                     isLoading={isLoading}
                     serverResponse={serverResponse}
-                    defaultValues={editRow}
+                    defaultValues={editRow} // ✅ pass edit values
                   />
                 </div>
               ) : (
                 <MasterGrid
-                  title="Module Master Grid"
+                  title="Language Master Grid"
                   data={gridData}
                   isLoading={isLoading}
                   error={error}
-                  moduleName="ModuleMaster"
-                  onEdit={handleEdit}
+                  moduleName="LanguageMaster"
+                  onEdit={handleEdit} // ✅ pass handler
                 />
               )}
             </Col>
           </Row>
         </Container>
-
-        {/*  Toaster for notifications */}
         <Toaster toastData={toastData} setToastData={setToastData} />
       </main>
     </div>
   );
 };
 
-export default ModulePage;
+export default LanguagePage;

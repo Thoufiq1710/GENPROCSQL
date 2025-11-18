@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import axiosClient from "../../api/axiosClient";
-import Header from "../../components/Header/Header";
-import TabMenu from "../../components/Tabs/TabMenu";
-import LeftTabMenu from "../../components/LeftTabMenu/LeftTabMenu";
-import Toaster from "../../components/Toaster/Toaster";
+import axiosClient from "../../../api/axiosClient";
+import Header from "../../../components/Header/Header";
+import TabMenu from "../../../components/Tabs/TabMenu";
+import LeftTabMenu from "../../../components/LeftTabMenu/LeftTabMenu";
+import Toaster from "../../../components/Toaster/Toaster";
 import {
   Container,
   Row,
@@ -14,7 +14,7 @@ import {
   Spinner,
   Alert,
 } from "react-bootstrap";
-import "../Style.css";
+import "../../Style.css";
 
 const LovDetailsPage = () => {
   const [lovOptions, setLovOptions] = useState([]);

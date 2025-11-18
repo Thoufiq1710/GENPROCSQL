@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import axiosClient from "../../api/axiosClient";
-import Header from "../../components/Header/Header";
-import LeftTabMenu from "../../components/LeftTabMenu/LeftTabMenu";
-import TabMenu from "../../components/Tabs/TabMenu";
-import FormGrid from "../../components/FormGrid/FormGrid";
-import MasterGrid from "../../components/MasterGrid/MasterGrid";
-import Toaster from "../../components/Toaster/Toaster";
+import axiosClient from "../../../api/axiosClient";
+import Header from "../../../components/Header/Header";
+import LeftTabMenu from "../../../components/LeftTabMenu/LeftTabMenu";
+import TabMenu from "../../../components/Tabs/TabMenu";
+import MasterGrid from "../../../components/MasterGrid/MasterGrid";
+import FormGrid from "../../../components/FormGrid/FormGrid";
+import Toaster from "../../../components/Toaster/Toaster";
 import { Container, Row, Col } from "react-bootstrap";
-import "../Style.css";
+import "../../Style.css";
 
-const DbConnectionPage = () => {
+const ErrorMsgPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverResponse, setServerResponse] = useState(null);
   const [activeTab, setActiveTab] = useState("master");
@@ -17,91 +17,70 @@ const DbConnectionPage = () => {
   const [error, setError] = useState("");
   const [editRow, setEditRow] = useState(null);
   const [toastData, setToastData] = useState([]);
-  const [projectOptions, setProjectOptions] = useState([]);
 
-  //  Fetch Dropdown Data (Project List)
-  const fetchProjects = async () => {
-    try {
-      const res = await axiosClient.get("/common/drop-down/PROJECT/NULL");
-      if (res.data?.result && Array.isArray(res.data.result)) {
-        const formatted = res.data.result.map((item) => ({
-          label: item.Name,
-          value: item.Id,
-        }));
-        setProjectOptions(formatted);
-        console.log("Fetched project options:", formatted);
-      } else {
-        console.warn("Invalid response structure:", res.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch project dropdown:", err);
-    }
-  };
-
-  //  Fetch Master Grid Data
+  // ✅ Fetch Master Grid
   const fetchMasterGrid = async () => {
     setIsLoading(true);
     setError("");
     try {
       const res = await axiosClient.get(
-        "/common/master-grid/DCS_M_DB_CONNECTION/null"
+        "/common/master-grid/DCS_M_ERR_MESSAGE/null"
       );
-      if (res.data?.success && Array.isArray(res.data.data)) {
+      if (Array.isArray(res.data)) {
+        setGridData(res.data);
+      } else if (res.data?.data && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
       } else {
         setError("Invalid response format.");
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch master grid data.");
+      setError("Failed to fetch error message data.");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProjects();
     fetchMasterGrid();
   }, []);
-  console.log("Project Options:", projectOptions);
-  //  DB Connection Form Fields
+
+  // ✅ Form Fields
   const fields = [
+    // { name: "errorPrefixId", label: "Error Prefix ID", type: "text" },
     {
-      name: "dbName",
-      label: "Database Name",
+      name: "errorMsg",
+      label: "Error Message",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Error message is required";
+        if (value.length < 5)
+          return "Error message must be at least 5 characters long";
+        if (!/^[A-Za-z0-9\s.,;:'"!?-]+$/.test(value))
+          return "Error message contains invalid characters";
+        return true;
+      },
     },
     {
-      name: "serverName",
-      label: "Server Name",
+      name: "errorCode",
+      label: "Error Code",
       type: "text",
       required: true,
+      validate: (value) => {
+        if (!value?.trim()) return "Error code is required";
+        if (!/^[A-Z0-9_]+$/.test(value))
+          return "Error code must be uppercase letters, numbers, or underscores only";
+        if (value.length < 3)
+          return "Error code must be at least 3 characters long";
+        return true;
+      },
     },
     {
-      name: "userName",
-      label: "Username",
-      type: "text",
-      required: true,
-    },
-    {
-      name: "password",
-      label: "Password",
-      type: "password",
-      required: true,
-    },
-    {
-      name: "projectId",
-      label: "Project",
-      type: "select",
-      required: true,
-      options: projectOptions,
-    },
-    {
-      name: "companyName",
-      label: "Company Name",
-      type: "text",
-      required: true,
+      name: "createdUser",
+      label: "Created User",
+      type: "number",
+      hidden: true,
     },
     {
       name: "status",
@@ -114,16 +93,20 @@ const DbConnectionPage = () => {
       label: "Inactive Reason",
       type: "textarea",
       required: false,
-    },
-    {
-      name: "createdUser",
-      label: "Created User",
-      type: "number",
-      hidden: true,
+      validate: (value, row) => {
+        // Only required if status = false (unchecked)
+        if (row.status === false) {
+          if (!value?.trim())
+            return "Inactive reason is required when status is inactive";
+          if (value.length < 5)
+            return "Inactive reason must be at least 5 characters long";
+        }
+        return true;
+      },
     },
   ];
 
-  // ✅ Tabs Configuration
+  // ✅ Tabs
   const tabs = [
     {
       key: "master",
@@ -133,30 +116,32 @@ const DbConnectionPage = () => {
     },
     {
       key: "insert",
-      label: "Insert DB Connection",
+      label: "Insert Error Message",
       onClick: (key) => setActiveTab(key),
       active: activeTab === "insert",
     },
   ];
 
-  //  Submit Handler
+  // ✅ Submit Handler
   const handleFormSubmit = async (rows) => {
     setIsLoading(true);
     setServerResponse(null);
     try {
       const payload = rows.map((r) => ({
         ...r,
-        dbConnectionId: editRow?.dbConnectionId || 0,
+        errorPrefixId: null,
+        errorId: editRow?.errorId || 0,
       }));
 
-      const res = await axiosClient.post("/common/dbConnection/names", payload);
+      const res = await axiosClient.post("/common/error-msg", payload);
       const data = res.data;
       setServerResponse(data);
 
-      if (data.success && !data.failedConnections?.length) {
+      // ✅ Complete Success
+      if (data.success && !data.failedErrors?.length) {
         setToastData([
           {
-            text: data.message || "DB Connection saved successfully.",
+            text: data.message || "Error messages saved successfully.",
             variant: "success",
           },
         ]);
@@ -166,21 +151,29 @@ const DbConnectionPage = () => {
         return;
       }
 
-      if (data.failedConnections?.length > 0) {
+      // ✅ Partial Success
+      if (data.failedErrors?.length > 0) {
         const summaryToast = {
           text: `${data.message} — Total: ${data.summary.total}, Inserted: ${data.summary.inserted}, Failed: ${data.summary.failed}`,
           variant: "warning",
         };
 
-        const failedToasts = data.failedConnections.map((f) => ({
-          text: `❌ ${f.dbConnection.dbName}: ${f.error}`,
+        const failedToasts = data.failedErrors.map((f) => ({
+          text: `❌ ${f.data.errorMsg}: ${f.error}`,
           variant: "danger",
         }));
 
-        setToastData([summaryToast, ...failedToasts]);
+        const addedToasts =
+          data.addedErrors?.map((a) => ({
+            text: `✅ ${a.errorMsg}: ${a.dbMessage || "Added successfully."}`,
+            variant: "success",
+          })) || [];
+
+        setToastData([summaryToast, ...addedToasts, ...failedToasts]);
         return;
       }
 
+      // ✅ Unexpected response
       setToastData([
         { text: data.message || "Unexpected response.", variant: "warning" },
       ]);
@@ -188,7 +181,9 @@ const DbConnectionPage = () => {
       console.error(err);
       setToastData([
         {
-          text: err.response?.data?.message || "Error submitting form.",
+          text:
+            err.response?.data?.message ||
+            "Error submitting error message data.",
           variant: "danger",
         },
       ]);
@@ -197,44 +192,39 @@ const DbConnectionPage = () => {
     }
   };
 
-  //  Edit Handler
+  // ✅ Edit Handler
   const handleEdit = async (rowData) => {
     try {
-      const id = rowData.DB_CONNECTION_ID;
+      const id = rowData.ERROR_ID;
       if (!id) {
-        console.error("Invalid DB_CONNECTION_ID for editing:", rowData);
+        console.error("Invalid ERROR_ID for editing:", rowData);
         return;
       }
       setIsLoading(true);
 
       const res = await axiosClient.get(
-        `/common/master-grid/editbind/DCS_M_DB_CONNECTION/${id}`
+        `/common/master-grid/editbind/DCS_M_ERR_MESSAGE/${id}`
       );
 
       if (res.data?.success && res.data?.data.length > 0) {
         const record = res.data.data[0];
 
         const mappedRow = {
-          dbConnectionId: record.DB_CONNECTION_ID || 0,
-          dbName: record.DB_NAME || "",
-          serverName: record.SERVER_NAME || "",
-          userName: record.USER_NAME || "",
-          password: record.PASSWORD || "",
-          projectId: record.PROJECT_ID || "",
-          companyName: record.COMPANY_NAME || "",
-          status: record.C2C_Status === 1,
+          errorId: record.ERROR_ID || 0,
+          errorPrefixId: record.ERROR_PREFIX_ID || "",
+          errorMsg: record.ERROR_MSG || "",
+          errorCode: record.ERROR_CODE || "",
           inactiveReason: record.C2C_Inactive_Reason || "",
+          status: record.C2C_Status === 1,
           createdUser: record.C2C_Cuser || 1,
           createdDate: record.C2C_Cdate || "",
         };
-
-        console.log("Fetched Edit Data:", mappedRow);
 
         setEditRow(mappedRow);
         setActiveTab("insert");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        setError("No data found for the selected DB_CONNECTION record.");
+        setError("No data found for the selected project record.");
       }
     } catch (error) {
       console.error("Edit fetch failed:", err);
@@ -265,7 +255,7 @@ const DbConnectionPage = () => {
               {activeTab === "insert" ? (
                 <div className="form-area">
                   <FormGrid
-                    title="DB Connection Creation"
+                    title="Error Message Creation"
                     fields={fields}
                     onSubmit={handleFormSubmit}
                     isLoading={isLoading}
@@ -275,11 +265,11 @@ const DbConnectionPage = () => {
                 </div>
               ) : (
                 <MasterGrid
-                  title="DB Connection Master Grid"
+                  title="Error Message Master Grid"
                   data={gridData}
                   isLoading={isLoading}
                   error={error}
-                  moduleName="DbConnectionMaster"
+                  moduleName="ErrorMsgMaster"
                   onEdit={handleEdit}
                 />
               )}
@@ -294,4 +284,4 @@ const DbConnectionPage = () => {
   );
 };
 
-export default DbConnectionPage;
+export default ErrorMsgPage;

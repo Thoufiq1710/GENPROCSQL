@@ -11,9 +11,13 @@ import {
   Row,
   Col,
 } from "react-bootstrap";
-import { Trash } from "react-bootstrap-icons"; // 🗑️ Optional Bootstrap icon
-import "./FormGrid.css";
+import { Trash } from "react-bootstrap-icons";
 import Select from "react-select";
+import "./FormGrid.css";
+import {
+  validateAllRows,
+  clearValidationCache,
+} from "../../utils/validationHelper";
 
 const FormGrid = ({
   title,
@@ -26,9 +30,9 @@ const FormGrid = ({
   const [rows, setRows] = useState([]);
   const [errors, setErrors] = useState([]);
 
-  // 🧩 Helper to create an empty row
-  const createEmptyRow = () => {
-    return Object.fromEntries(
+  // 🧩 Create an empty row dynamically
+  const createEmptyRow = () =>
+    Object.fromEntries(
       fields.map((f) => {
         switch (f.name) {
           case "status":
@@ -37,7 +41,6 @@ const FormGrid = ({
             return [f.name, 1];
           default:
             if (f.type === "select") {
-              // Set first option or 0 as default
               const firstValue =
                 f.options?.[0]?.value !== undefined ? f.options[0].value : 0;
               return [f.name, firstValue];
@@ -46,71 +49,40 @@ const FormGrid = ({
         }
       })
     );
-  };
 
-  //  Initialize the first empty row
+  // 🪄 Initialize first row (or defaultValues for edit)
   useEffect(() => {
     if (fields?.length > 0) {
-      if (defaultValues) setRows([defaultValues]); // ✅ prefill edit values
-      else setRows([createEmptyRow()]);
+      setRows(defaultValues ? [defaultValues] : [createEmptyRow()]);
     }
   }, [fields, defaultValues]);
 
-  // ➕ Add Row
-  const handleAddRow = () => {
-    setRows((prev) => [...prev, createEmptyRow()]);
-  };
+  // ➕ Add new row
+  const handleAddRow = () => setRows((prev) => [...prev, createEmptyRow()]);
 
-  // ✏️ Handle Field Change
+  // ✏️ Handle field changes
   const handleChange = (index, fieldName, value) => {
     setRows((prev) =>
       prev.map((row, i) => (i === index ? { ...row, [fieldName]: value } : row))
     );
   };
 
-  // ❌ Remove Row
-  const handleRemoveRow = (index) => {
+  // ❌ Delete row
+  const handleRemoveRow = (index) =>
     setRows((prev) => prev.filter((_, i) => i !== index));
-  };
 
-  // ✅ Submit
+  // ✅ Optimized Submit with centralized validation
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newErrors = [];
+    const validationErrors = validateAllRows(rows, fields);
 
-    rows.forEach((row, rowIndex) => {
-      fields.forEach((f) => {
-        if (f.required && !f.hidden) {
-          const value = row[f.name];
-          let isInvalid = false;
-
-          if (f.type === "select") {
-            isInvalid =
-              value === 0 ||
-              value === "" ||
-              value === null ||
-              value === undefined;
-          } else {
-            isInvalid =
-              value === "" ||
-              value === null ||
-              (typeof value === "string" && !value.trim());
-          }
-
-          if (isInvalid) {
-            newErrors.push({ row: rowIndex, field: f.name });
-          }
-        }
-      });
-    });
-
-    if (newErrors.length > 0) {
-      setErrors(newErrors);
-      alert("Please fill all required fields before submitting.");
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
     setErrors([]);
+    clearValidationCache();
     onSubmit?.(rows);
   };
 
@@ -119,19 +91,21 @@ const FormGrid = ({
   if (!fields?.length)
     return <Alert variant="warning">No field definitions found.</Alert>;
 
+  // 🧩 Helper: find error message for a field
+  const getFieldErrors = (rowIdx, field) =>
+    errors.filter((err) => err.row === rowIdx && err.field === field);
+
   return (
     <Container fluid className="mt-4">
       <Row className="justify-content-center">
         <Col xs={12}>
           <Card.Body className="p-4">
-            {/* Header Section */}
             <div className="d-flex justify-content-end mb-4">
               <Button variant="primary" onClick={handleAddRow} size="sm">
                 + Add Row
               </Button>
             </div>
 
-            {/* Form Section */}
             <Form onSubmit={handleSubmit}>
               <div className="table-responsive">
                 <Table bordered hover className="align-middle text-center">
@@ -148,8 +122,7 @@ const FormGrid = ({
                             </th>
                           )
                       )}
-                      <th style={{ width: "100px" }}>Action</th>{" "}
-                      {/* 🗑️ New Column */}
+                      <th style={{ width: "100px" }}>Action</th>
                     </tr>
                   </thead>
 
@@ -157,133 +130,124 @@ const FormGrid = ({
                     {rows.map((row, i) => (
                       <tr key={i}>
                         <td className="fw-semibold">{i + 1}</td>
+
                         {fields.map(
                           (f, j) =>
                             !f.hidden &&
                             (f.name !== "inactiveReason" ||
                               showInactiveColumn) && (
                               <td key={j}>
-                                {/* Switch */}
-                                {f.name === "status" ? (
-                                  <Form.Check
-                                    type="switch"
-                                    id={`status-${i}`}
-                                    label={row[f.name] ? "Active" : "Inactive"}
-                                    checked={!!row[f.name]}
-                                    onChange={(e) =>
-                                      handleChange(i, f.name, e.target.checked)
-                                    }
-                                  />
-                                ) : f.type === "select" ? (
-                                  // Dropdown
-                                  <Select
-                                    options={f.options || []}
-                                    value={
-                                      (f.options || []).find(
-                                        (opt) =>
-                                          String(opt.value) ===
-                                          String(row[f.name] ?? 0)
-                                      ) || (f.options ? f.options[0] : null)
-                                    }
-                                    onChange={(selected) =>
-                                      handleChange(
-                                        i,
-                                        f.name,
-                                        selected ? selected.value : 0
-                                      )
-                                    }
-                                    menuPortalTarget={document.body}
-                                    styles={{
-                                      control: (base, state) => ({
-                                        ...base,
-                                        minHeight: 38,
-                                        fontSize: "0.9rem",
-                                        borderColor: errors.some(
-                                          (err) =>
-                                            err.row === i &&
-                                            err.field === f.name
+                                <div style={{ position: "relative" }}>
+                                  {f.name === "status" ? (
+                                    <Form.Check
+                                      type="switch"
+                                      id={`status-${i}`}
+                                      label={
+                                        row[f.name] ? "Active" : "Inactive"
+                                      }
+                                      checked={!!row[f.name]}
+                                      onChange={(e) =>
+                                        handleChange(
+                                          i,
+                                          f.name,
+                                          e.target.checked
                                         )
-                                          ? "red"
-                                          : state.isFocused
-                                          ? "#4f9dff"
-                                          : "#ced4da",
-                                        boxShadow: state.isFocused
-                                          ? "0 0 0 0.2rem rgba(79,157,255,0.25)"
-                                          : "none",
-                                        "&:hover": {
-                                          borderColor: errors.some(
-                                            (err) =>
-                                              err.row === i &&
-                                              err.field === f.name
-                                          )
+                                      }
+                                    />
+                                  ) : f.type === "select" ? (
+                                    <Select
+                                      options={f.options || []}
+                                      value={
+                                        (f.options || []).find(
+                                          (opt) =>
+                                            String(opt.value) ===
+                                            String(row[f.name] ?? 0)
+                                        ) || null
+                                      }
+                                      onChange={(selected) =>
+                                        handleChange(
+                                          i,
+                                          f.name,
+                                          selected ? selected.value : 0
+                                        )
+                                      }
+                                      menuPortalTarget={document.body}
+                                      styles={{
+                                        control: (base, state) => ({
+                                          ...base,
+                                          minHeight: 38,
+                                          fontSize: "0.9rem",
+                                          borderColor: getFieldErrors(i, f.name)
+                                            .length
                                             ? "red"
-                                            : "#4f9dff",
-                                        },
-                                        width: "100%",
-                                      }), 
-                                      menuPortal: (base) => ({
-                                        ...base,
-                                        zIndex: 9999,
-                                        fontSize: "1rem",
-                                      }),
-                                      menu: (base) => ({
-                                        ...base,
-                                        zIndex: 99999,
-                                        fontSize: "1rem",
-                                        width: "max-content", // ✅ adjust to longest option
-                                        minWidth: "100%",
-                                      }),
-                                      menuList: (base) => ({
-                                        ...base,
-                                        maxHeight: 180,
-                                        fontSize: "1rem",
-                                      }),
-                                      option: (base, state) => ({
-                                        ...base,
-                                        whiteSpace: "nowrap",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        fontSize: "0.9rem",
-                                      }),
-                                    }}
-                                  />
-                                ) : f.type === "textarea" ? (
-                                  // Textarea
-                                  <Form.Control
-                                    as="textarea"
-                                    rows={2}
-                                    value={row[f.name]}
-                                    onChange={(e) =>
-                                      handleChange(i, f.name, e.target.value)
-                                    }
-                                    style={{
-                                      borderColor: errors.some(
-                                        (err) =>
-                                          err.row === i && err.field === f.name
-                                      )
-                                        ? "red"
-                                        : undefined,
-                                    }}
-                                    disabled={
-                                      f.name === "inactiveReason" && row.status
-                                    }
-                                  />
-                                ) : (
-                                  // Text/number input
-                                  <Form.Control
-                                    type={f.type}
-                                    value={row[f.name]}
-                                    required={f.required}
-                                    onChange={(e) =>
-                                      handleChange(i, f.name, e.target.value)
-                                    }
-                                  />
-                                )}
+                                            : state.isFocused
+                                            ? "#4f9dff"
+                                            : "#ced4da",
+                                          boxShadow: state.isFocused
+                                            ? "0 0 0 0.2rem rgba(79,157,255,0.25)"
+                                            : "none",
+                                        }),
+                                        menuPortal: (base) => ({
+                                          ...base,
+                                          zIndex: 9999,
+                                        }),
+                                      }}
+                                    />
+                                  ) : f.type === "textarea" ? (
+                                    <Form.Control
+                                      as="textarea"
+                                      rows={2}
+                                      value={row[f.name]}
+                                      onChange={(e) =>
+                                        handleChange(i, f.name, e.target.value)
+                                      }
+                                      style={{
+                                        borderColor: getFieldErrors(i, f.name)
+                                          .length
+                                          ? "red"
+                                          : undefined,
+                                      }}
+                                      disabled={
+                                        f.name === "inactiveReason" &&
+                                        row.status
+                                      }
+                                    />
+                                  ) : (
+                                    <Form.Control
+                                      type={f.type}
+                                      value={row[f.name]}
+                                      onChange={(e) =>
+                                        handleChange(i, f.name, e.target.value)
+                                      }
+                                      style={{
+                                        borderColor: getFieldErrors(i, f.name)
+                                          .length
+                                          ? "red"
+                                          : undefined,
+                                      }}
+                                    />
+                                  )}
+
+                                  {/* 🧩 Error Message */}
+                                  {getFieldErrors(i, f.name).map((err, idx) => (
+                                    <small
+                                      key={idx}
+                                      style={{
+                                        color: "red",
+                                        fontSize: "0.8rem",
+                                        display: "block",
+                                        marginTop: "4px",
+                                        textAlign: "left",
+                                      }}
+                                    >
+                                      {err.message}
+                                    </small>
+                                  ))}
+                                </div>
                               </td>
                             )
                         )}
 
-                        {/* 🗑️ Remove Button */}
                         <td>
                           <Button
                             variant="light"
@@ -302,7 +266,6 @@ const FormGrid = ({
                 </Table>
               </div>
 
-              {/* Submit Section */}
               <div className="d-flex justify-content-end mt-3">
                 <Button
                   type="submit"
@@ -327,32 +290,13 @@ const FormGrid = ({
   );
 };
 
-// ✅ Prop Validation
 FormGrid.propTypes = {
   title: PropTypes.string,
-  fields: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      label: PropTypes.string.isRequired,
-      type: PropTypes.string,
-      required: PropTypes.bool,
-      hidden: PropTypes.bool,
-      options: PropTypes.arrayOf(
-        PropTypes.shape({
-          label: PropTypes.string,
-          value: PropTypes.any,
-        })
-      ),
-      fetchOptions: PropTypes.func,
-    })
-  ).isRequired,
+  fields: PropTypes.array.isRequired,
   onSubmit: PropTypes.func,
   isLoading: PropTypes.bool,
-  serverResponse: PropTypes.shape({
-    success: PropTypes.bool,
-    message: PropTypes.string,
-  }),
-  defaultValues: PropTypes.object, // ✅ for edit functionality
+  serverResponse: PropTypes.object,
+  defaultValues: PropTypes.object,
 };
 
 FormGrid.defaultProps = {
