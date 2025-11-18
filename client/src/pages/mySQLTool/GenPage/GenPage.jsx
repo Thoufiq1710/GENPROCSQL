@@ -17,53 +17,50 @@ const GenPage = () => {
     projectId: "",
     moduleId: "",
     productId: "",
-    description: "",
-    author: "",
+    spName: "",
+    spDescription: "",
+    authorName: "",
     tableName: "",
-    pageNo: "",
-    logo: false,
-    exportType: "",
-    columnGrid: [],
-    procedureName: "",
+    userVar: "",
+    scopeVar: "",
+    scopeIdentity: true,
+    errMsg: true,
+    status: true,
+    inactiveReason: "",
+    user: 1,
+    columns: [],
   });
 
+  const emptyColumnRow = {
+    Insert_Update_SP_Insert_Columns: [],
+    Insert_Update_SP_Update_Columns: [],
+    Insert_Update_SP_Record_Count_Columns: [],
+    Insert_Update_SP_Convert_Date_Columns: [],
+    Insert_Update_SP_Where_Columns: [],
+    Insert_Update_SP_Prefix_Columns: [],
+  };
+
   // ========================
-  // DROPDOWN FETCH
+  // FETCH OPTIONS
   // ========================
   const fetchProjects = async () => {
     const res = await axiosClient.get("/common/drop-down/PROJECT/NULL");
-    const options = res.data.result.map((p) => ({
-      value: p.Id,
-      label: p.Name,
-    }));
-    setProjects(options);
+    setProjects(res.data.result.map((p) => ({ value: p.Id, label: p.Name })));
   };
-  console.log(form.tableName);
+
   const fetchModules = async (projectId) => {
     const res = await axiosClient.get(`/common/drop-down/MODULE/${projectId}`);
-    const options = res.data.result.map((m) => ({
-      value: m.Id,
-      label: m.Name,
-    }));
-    setModules(options);
+    setModules(res.data.result.map((m) => ({ value: m.Id, label: m.Name })));
   };
 
   const fetchProducts = async (projectId) => {
     const res = await axiosClient.get(`/common/drop-down/PRODUCT/${projectId}`);
-    const options = res.data.result.map((p) => ({
-      value: p.Id,
-      label: p.Name,
-    }));
-    setProducts(options);
+    setProducts(res.data.result.map((p) => ({ value: p.Id, label: p.Name })));
   };
 
   const fetchTables = async () => {
     const res = await axiosClient.get("/common/drop-down/TABLE_LIST/null");
-    const options = res.data.result.map((t) => ({
-      value: t.Name,
-      label: t.Name,
-    }));
-    setTables(options);
+    setTables(res.data.result.map((t) => ({ value: t.Name, label: t.Name })));
   };
 
   const fetchColumns = async (tableName) => {
@@ -87,11 +84,10 @@ const GenPage = () => {
   }, []);
 
   // ========================
-  // HANDLE CHANGE
+  // SELECT HANDLER
   // ========================
   const handleSelectChange = (name, selected) => {
-    let value = selected ? selected.value : "";
-
+    const value = selected ? selected.value : "";
     setForm({ ...form, [name]: value });
 
     if (name === "projectId") {
@@ -105,11 +101,57 @@ const GenPage = () => {
   };
 
   // ========================
-  // GENERATE ACTION
+  // COLUMN HANDLERS
   // ========================
-  const handleGenerate = () => {
-    console.log("Generating with:", form);
-    alert("Generated Successfully!");
+  const addColumnRow = () => {
+    setForm({ ...form, columns: [...form.columns, { ...emptyColumnRow }] });
+  };
+
+  const removeColumnRow = (index) => {
+    const newRows = [...form.columns];
+    newRows.splice(index, 1);
+    setForm({ ...form, columns: newRows });
+  };
+
+  // FIXED VERSION — receives selected objects directly
+  const handleColumnChange = (index, field, selected) => {
+    const updated = [...form.columns];
+    updated[index][field] = selected ? selected.map((s) => s.value) : [];
+    setForm({ ...form, columns: updated });
+  };
+
+  // ========================
+  // SUBMIT
+  // ========================
+  const handleSubmit = async () => {
+    const payload = {
+      spGenDetailsId: 0,
+      spName: form.spName,
+      spDescription: form.spDescription,
+      moduleName: modules.find((m) => m.value === form.moduleId)?.label || "",
+      productName:
+        products.find((p) => p.value === form.productId)?.label || "",
+      authorName: form.authorName,
+      tableName: form.tableName,
+      columns: form.columns,
+      userVar: form.userVar,
+      scopeIdentity: form.scopeIdentity,
+      errMsg: form.errMsg,
+      scopeVar: form.scopeVar,
+      status: true,
+      inactiveReason: "",
+      user: 1,
+    };
+
+    console.log("FINAL PAYLOAD:", payload);
+
+    try {
+      await axiosClient.post("/mysql-tool/sp-gen/", payload);
+      alert("SP Generated Successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Error generating SP!");
+    }
   };
 
   return (
@@ -120,6 +162,7 @@ const GenPage = () => {
 
       <main className="main-content">
         <Header />
+
         <Container fluid className="py-4">
           <Card className="p-4 shadow-sm rounded">
             <h4 className="mb-4">SP Generator</h4>
@@ -131,9 +174,7 @@ const GenPage = () => {
                 <Select
                   options={projects}
                   value={projects.find((p) => p.value === form.projectId)}
-                  onChange={(selected) =>
-                    handleSelectChange("projectId", selected)
-                  }
+                  onChange={(s) => handleSelectChange("projectId", s)}
                 />
               </Col>
 
@@ -142,9 +183,7 @@ const GenPage = () => {
                 <Select
                   options={modules}
                   value={modules.find((m) => m.value === form.moduleId)}
-                  onChange={(selected) =>
-                    handleSelectChange("moduleId", selected)
-                  }
+                  onChange={(s) => handleSelectChange("moduleId", s)}
                 />
               </Col>
 
@@ -153,23 +192,19 @@ const GenPage = () => {
                 <Select
                   options={products}
                   value={products.find((p) => p.value === form.productId)}
-                  onChange={(selected) =>
-                    handleSelectChange("productId", selected)
-                  }
+                  onChange={(s) => handleSelectChange("productId", s)}
                 />
               </Col>
             </Row>
 
+            {/* DETAILS */}
             <Row className="mb-4">
               <Col md={3}>
                 <Form.Label>Procedure Name</Form.Label>
                 <Form.Control
                   type="text"
-                  name="procedureName"
-                  value={form.procedureName}
-                  onChange={(e) =>
-                    setForm({ ...form, procedureName: e.target.value })
-                  }
+                  value={form.spName}
+                  onChange={(e) => setForm({ ...form, spName: e.target.value })}
                 />
               </Col>
 
@@ -178,11 +213,9 @@ const GenPage = () => {
                 <Form.Control
                   as="textarea"
                   rows={3}
-                  className="custom-textarea"
-                  name="description"
-                  value={form.description}
+                  value={form.spDescription}
                   onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
+                    setForm({ ...form, spDescription: e.target.value })
                   }
                 />
               </Col>
@@ -191,48 +224,172 @@ const GenPage = () => {
                 <Form.Label>Author</Form.Label>
                 <Form.Control
                   type="text"
-                  name="author"
-                  value={form.author}
-                  onChange={(e) => setForm({ ...form, author: e.target.value })}
+                  value={form.authorName}
+                  onChange={(e) =>
+                    setForm({ ...form, authorName: e.target.value })
+                  }
                 />
               </Col>
             </Row>
 
-            {/* TABLE SELECTION */}
+            {/* TABLE */}
             <Row className="mb-3">
               <Col md={4}>
                 <Form.Label>Select Table</Form.Label>
                 <Select
                   options={tables}
                   value={tables.find((t) => t.value === form.tableName)}
-                  onChange={(selected) =>
-                    handleSelectChange("tableName", selected)
-                  }
+                  onChange={(s) => handleSelectChange("tableName", s)}
                 />
               </Col>
             </Row>
 
-            {/* COLUMN MULTI SELECT */}
-            <Row className="mt-4">
-              <Form.Label>Columns</Form.Label>
-              <Select
-                isMulti
-                name="columnGrid"
-                options={columns}
-                value={columns.filter((c) => form.columnGrid.includes(c.value))}
-                onChange={(selected) =>
-                  setForm({
-                    ...form,
-                    columnGrid: selected.map((s) => s.value),
-                  })
-                }
-              />
-            </Row>
+            {/* COLUMN BUILDER */}
+            <h5 className="mt-4 mb-2">Column Mapping</h5>
+
+            {form.columns.map((row, index) => (
+              <Card key={index} className="p-3 mb-3 border">
+                <Row>
+                  {/* INSERT */}
+                  <Col md={4}>
+                    <Form.Label>Insert Columns</Form.Label>
+                    <Select
+                      isMulti
+                      options={columns}
+                      value={columns.filter((col) =>
+                        row.Insert_Update_SP_Insert_Columns?.includes(col.value)
+                      )}
+                      onChange={(selected) =>
+                        handleColumnChange(
+                          index,
+                          "Insert_Update_SP_Insert_Columns",
+                          selected
+                        )
+                      }
+                    />
+                  </Col>
+
+                  {/* UPDATE */}
+                  <Col md={4}>
+                    <Form.Label>Update Columns</Form.Label>
+                    <Select
+                      isMulti
+                      options={columns}
+                      value={columns.filter((col) =>
+                        row.Insert_Update_SP_Update_Columns?.includes(col.value)
+                      )}
+                      onChange={(selected) =>
+                        handleColumnChange(
+                          index,
+                          "Insert_Update_SP_Update_Columns",
+                          selected
+                        )
+                      }
+                    />
+                  </Col>
+
+                  {/* RECORD COUNT */}
+                  <Col md={4}>
+                    <Form.Label>Record Count Columns</Form.Label>
+                    <Select
+                      isMulti
+                      options={columns}
+                      value={columns.filter((col) =>
+                        row.Insert_Update_SP_Record_Count_Columns?.includes(
+                          col.value
+                        )
+                      )}
+                      onChange={(selected) =>
+                        handleColumnChange(
+                          index,
+                          "Insert_Update_SP_Record_Count_Columns",
+                          selected
+                        )
+                      }
+                    />
+                  </Col>
+                </Row>
+
+                <Row className="mt-2">
+                  {/* DATE */}
+                  <Col md={4}>
+                    <Form.Label>Date Convert Columns</Form.Label>
+                    <Select
+                      isMulti
+                      options={columns}
+                      value={columns.filter((col) =>
+                        row.Insert_Update_SP_Convert_Date_Columns?.includes(
+                          col.value
+                        )
+                      )}
+                      onChange={(selected) =>
+                        handleColumnChange(
+                          index,
+                          "Insert_Update_SP_Convert_Date_Columns",
+                          selected
+                        )
+                      }
+                    />
+                  </Col>
+
+                  {/* WHERE */}
+                  <Col md={4}>
+                    <Form.Label>Where Columns</Form.Label>
+                    <Select
+                      isMulti
+                      options={columns}
+                      value={columns.filter((col) =>
+                        row.Insert_Update_SP_Where_Columns?.includes(col.value)
+                      )}
+                      onChange={(selected) =>
+                        handleColumnChange(
+                          index,
+                          "Insert_Update_SP_Where_Columns",
+                          selected
+                        )
+                      }
+                    />
+                  </Col>
+
+                  {/* PREFIX */}
+                  <Col md={4}>
+                    <Form.Label>Prefix Columns</Form.Label>
+                    <Select
+                      isMulti
+                      options={columns}
+                      value={columns.filter((col) =>
+                        row.Insert_Update_SP_Prefix_Columns?.includes(col.value)
+                      )}
+                      onChange={(selected) =>
+                        handleColumnChange(
+                          index,
+                          "Insert_Update_SP_Prefix_Columns",
+                          selected
+                        )
+                      }
+                    />
+                  </Col>
+                </Row>
+
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => removeColumnRow(index)}
+                >
+                  Remove Row
+                </Button>
+              </Card>
+            ))}
+
+            <Button variant="secondary" onClick={addColumnRow}>
+              + Add Column Row
+            </Button>
 
             <Row className="mt-4">
               <Col md={3}>
-                <Button variant="primary" onClick={handleGenerate}>
-                  Generate
+                <Button variant="primary" onClick={handleSubmit}>
+                  Submit
                 </Button>
               </Col>
             </Row>
