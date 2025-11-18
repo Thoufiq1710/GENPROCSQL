@@ -1,0 +1,110 @@
+/* ----------- MAIN LAYOUT ----------- */
+.master-page {
+  display: flex;
+  height: 100vh;
+  background: #f4f7fb;
+}
+
+.sidebar {
+  width: 250px;
+  background: #1e1e2f;
+  color: #fff;
+}
+
+/* ----------- CARD STYLE ----------- */
+.card {
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+.card h4 {
+  font-weight: 600;
+  color: #333;
+}
+
+/* ----------- FORM LABEL ----------- */
+form label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+/* ----------- TEXTBOX & TEXTAREA ----------- */
+.custom-textarea,
+.form-control {
+  border-radius: 8px !important;
+  border: 1px solid #d7d7d7 !important;
+  padding: 10px;
+  font-size: 14px;
+  transition: 0.2s ease-in-out;
+}
+
+.form-control:focus,
+.custom-textarea:focus {
+  border-color: #4a6cf7 !important;
+  box-shadow: 0 0 5px rgba(74, 108, 247, 0.2);
+}
+
+/* ----------- TEXTAREA HEIGHT ----------- */
+.custom-textarea {
+  resize: none;
+}
+
+/* ----------- REACT-SELECT STYLING ----------- */
+.css-13cymwt-control,
+.css-1s2u09g-control {
+  border-radius: 8px !important;
+  border: 1px solid #d7d7d7 !important;
+  min-height: 40px;
+  box-shadow: none !important;
+}
+
+.css-t3ipsp-control:hover {
+  border-color: #4a6cf7 !important;
+}
+
+.css-1nmdiq5-menu {
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+/* Multiselect chips */
+.css-12jo7m5 {
+  background: #4a6cf7 !important;
+  color: white !important;
+  border-radius: 6px !important;
+}
+
+/* ----------- ROW & COLUMN SPACING ----------- */
+.row {
+  margin-bottom: 15px;
+  
+}
+
+.col-md-3,
+.col-md-4 {
+  margin-bottom: 10px;
+}
+
+/* ----------- BUTTON ----------- */
+button.btn-primary {
+  background: #4a6cf7 !important;
+  border: none !important;
+  padding: 10px 18px !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+button.btn-primary:hover {
+  background: #3a59d6 !important;
+}
+
+/* ----------- MAIN CONTENT SCROLL ----------- */
+.main-content {
+  width: calc(100% - 250px);
+  overflow-y: auto;
+  padding-bottom: 30px;
+}

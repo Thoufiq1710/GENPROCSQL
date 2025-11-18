@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import axiosClient from "../../api/axiosClient";
-import Header from "../../components/Header/Header";
-import LeftTabMenu from "../../components/LeftTabMenu/LeftTabMenu";
-import TabMenu from "../../components/Tabs/TabMenu";
-import MasterGrid from "../../components/MasterGrid/MasterGrid";
-import FormGrid from "../../components/FormGrid/FormGrid";
+import axiosClient from "../../../api/axiosClient";
+import Header from "../../../components/Header/Header";
+import LeftTabMenu from "../../../components/LeftTabMenu/LeftTabMenu";
+import TabMenu from "../../../components/Tabs/TabMenu";
+import MasterGrid from "../../../components/MasterGrid/MasterGrid";
+import FormGrid from "../../../components/FormGrid/FormGrid";
 import { Container, Row, Col } from "react-bootstrap";
-import Toaster from "../../components/Toaster/Toaster";
-import "../Style.css";
+import Toaster from "../../../components/Toaster/Toaster";
+import "../../Style.css";
 
 const LanguagePage = () => {
   const [isLoading, setIsLoading] = useState(false);

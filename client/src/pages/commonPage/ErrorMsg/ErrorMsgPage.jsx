@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import axiosClient from "../../api/axiosClient";
-import Header from "../../components/Header/Header";
-import LeftTabMenu from "../../components/LeftTabMenu/LeftTabMenu";
-import TabMenu from "../../components/Tabs/TabMenu";
-import MasterGrid from "../../components/MasterGrid/MasterGrid";
-import FormGrid from "../../components/FormGrid/FormGrid";
-import Toaster from "../../components/Toaster/Toaster";
+import axiosClient from "../../../api/axiosClient";
+import Header from "../../../components/Header/Header";
+import LeftTabMenu from "../../../components/LeftTabMenu/LeftTabMenu";
+import TabMenu from "../../../components/Tabs/TabMenu";
+import MasterGrid from "../../../components/MasterGrid/MasterGrid";
+import FormGrid from "../../../components/FormGrid/FormGrid";
+import Toaster from "../../../components/Toaster/Toaster";
 import { Container, Row, Col } from "react-bootstrap";
-import "../Style.css";
+import "../../Style.css";
 
-const ProjectPage = () => {
+const ErrorMsgPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverResponse, setServerResponse] = useState(null);
   const [activeTab, setActiveTab] = useState("master");
@@ -17,43 +17,25 @@ const ProjectPage = () => {
   const [error, setError] = useState("");
   const [editRow, setEditRow] = useState(null);
   const [toastData, setToastData] = useState([]);
-  const [languageOptions, setLanguageOptions] = useState([]);
 
-  // Fetch Dropdown Data (Language List)
-  const fetchLanguages = async () => {
-    try {
-      const res = await axiosClient.get("/common/drop-down/LANGUAGE/NULL");
-      if (res.data?.result && Array.isArray(res.data.result)) {
-        const formatted = res.data.result.map((item) => ({
-          label: item.Name,
-          value: item.Id,
-        }));
-        setLanguageOptions(formatted);
-        console.log("Fetched language options:", formatted);
-      } else {
-        console.warn("Invalid response structure:", res.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch dropdown list:", err);
-    }
-  };
-
-  // Fetch Project Master Grid
+  // ✅ Fetch Master Grid
   const fetchMasterGrid = async () => {
     setIsLoading(true);
     setError("");
     try {
       const res = await axiosClient.get(
-        "/common/master-grid/DCS_M_PROJECT/null"
+        "/common/master-grid/DCS_M_ERR_MESSAGE/null"
       );
-      if (res.data?.success && Array.isArray(res.data.data)) {
+      if (Array.isArray(res.data)) {
+        setGridData(res.data);
+      } else if (res.data?.data && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
       } else {
         setError("Invalid response format.");
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch master grid data.");
+      setError("Failed to fetch error message data.");
     } finally {
       setIsLoading(false);
     }
@@ -61,53 +43,36 @@ const ProjectPage = () => {
 
   useEffect(() => {
     fetchMasterGrid();
-    fetchLanguages();
   }, []);
 
-  console.log("Language Options:", languageOptions);
-  // ✅ Project Form Fields
+  // ✅ Form Fields
   const fields = [
+    // { name: "errorPrefixId", label: "Error Prefix ID", type: "text" },
     {
-      name: "projectName",
-      label: "Project Name",
+      name: "errorMsg",
+      label: "Error Message",
       type: "text",
       required: true,
       validate: (value) => {
-        if (!value?.trim()) return "Project name is required";
-        if (!/^[A-Za-z0-9\s._-]+$/.test(value))
-          return "Project name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
-        if (value.length < 3)
-          return "Project name must be at least 3 characters long";
-        if (value.length > 100)
-          return "Project name cannot exceed 100 characters";
+        if (!value?.trim()) return "Error message is required";
+        if (value.length < 5)
+          return "Error message must be at least 5 characters long";
+        if (!/^[A-Za-z0-9\s.,;:'"!?-]+$/.test(value))
+          return "Error message contains invalid characters";
         return true;
       },
     },
     {
-      name: "languageId",
-      label: "Language",
-      type: "select",
+      name: "errorCode",
+      label: "Error Code",
+      type: "text",
       required: true,
-      options: languageOptions,
       validate: (value) => {
-        if (!value || value === "0" || value === 0)
-          return "Please select a language";
-        return true;
-      },
-    },
-    { name: "status", label: "Status", type: "checkbox", required: true },
-    {
-      name: "inactiveReason",
-      label: "Inactive Reason",
-      type: "textarea",
-      required: false,
-      validate: (value, row) => {
-        if (row.status === false) {
-          if (!value?.trim())
-            return "Inactive reason is required when project is inactive";
-          if (value.length < 5)
-            return "Inactive reason must be at least 5 characters long";
-        }
+        if (!value?.trim()) return "Error code is required";
+        if (!/^[A-Z0-9_]+$/.test(value))
+          return "Error code must be uppercase letters, numbers, or underscores only";
+        if (value.length < 3)
+          return "Error code must be at least 3 characters long";
         return true;
       },
     },
@@ -117,9 +82,31 @@ const ProjectPage = () => {
       type: "number",
       hidden: true,
     },
+    {
+      name: "status",
+      label: "Status",
+      type: "checkbox",
+      required: true,
+    },
+    {
+      name: "inactiveReason",
+      label: "Inactive Reason",
+      type: "textarea",
+      required: false,
+      validate: (value, row) => {
+        // Only required if status = false (unchecked)
+        if (row.status === false) {
+          if (!value?.trim())
+            return "Inactive reason is required when status is inactive";
+          if (value.length < 5)
+            return "Inactive reason must be at least 5 characters long";
+        }
+        return true;
+      },
+    },
   ];
 
-  // ✅ Tabs Configuration
+  // ✅ Tabs
   const tabs = [
     {
       key: "master",
@@ -129,7 +116,7 @@ const ProjectPage = () => {
     },
     {
       key: "insert",
-      label: "Insert the Project",
+      label: "Insert Error Message",
       onClick: (key) => setActiveTab(key),
       active: activeTab === "insert",
     },
@@ -142,17 +129,19 @@ const ProjectPage = () => {
     try {
       const payload = rows.map((r) => ({
         ...r,
-        projectId: editRow?.projectId || 0,
+        errorPrefixId: null,
+        errorId: editRow?.errorId || 0,
       }));
 
-      const res = await axiosClient.post("/common/project/names", payload);
+      const res = await axiosClient.post("/common/error-msg", payload);
       const data = res.data;
       setServerResponse(data);
 
-      if (data.success && !data.failedProjects?.length) {
+      // ✅ Complete Success
+      if (data.success && !data.failedErrors?.length) {
         setToastData([
           {
-            text: data.message || "Project saved successfully.",
+            text: data.message || "Error messages saved successfully.",
             variant: "success",
           },
         ]);
@@ -162,21 +151,29 @@ const ProjectPage = () => {
         return;
       }
 
-      if (data.failedProjects?.length > 0) {
+      // ✅ Partial Success
+      if (data.failedErrors?.length > 0) {
         const summaryToast = {
           text: `${data.message} — Total: ${data.summary.total}, Inserted: ${data.summary.inserted}, Failed: ${data.summary.failed}`,
           variant: "warning",
         };
 
-        const failedToasts = data.failedProjects.map((f) => ({
-          text: `❌ ${f.project.projectName}: ${f.error}`,
+        const failedToasts = data.failedErrors.map((f) => ({
+          text: `❌ ${f.data.errorMsg}: ${f.error}`,
           variant: "danger",
         }));
 
-        setToastData([summaryToast, ...failedToasts]);
+        const addedToasts =
+          data.addedErrors?.map((a) => ({
+            text: `✅ ${a.errorMsg}: ${a.dbMessage || "Added successfully."}`,
+            variant: "success",
+          })) || [];
+
+        setToastData([summaryToast, ...addedToasts, ...failedToasts]);
         return;
       }
 
+      // ✅ Unexpected response
       setToastData([
         { text: data.message || "Unexpected response.", variant: "warning" },
       ]);
@@ -184,7 +181,9 @@ const ProjectPage = () => {
       console.error(err);
       setToastData([
         {
-          text: err.response?.data?.message || "Error submitting project data.",
+          text:
+            err.response?.data?.message ||
+            "Error submitting error message data.",
           variant: "danger",
         },
       ]);
@@ -196,31 +195,30 @@ const ProjectPage = () => {
   // ✅ Edit Handler
   const handleEdit = async (rowData) => {
     try {
-      const id = rowData.PROJECT_ID;
+      const id = rowData.ERROR_ID;
       if (!id) {
-        console.error("Invalid PROJECT_ID for editing:", rowData);
+        console.error("Invalid ERROR_ID for editing:", rowData);
         return;
       }
       setIsLoading(true);
 
       const res = await axiosClient.get(
-        `/common/master-grid/editbind/DCS_M_PROJECT/${id}`
+        `/common/master-grid/editbind/DCS_M_ERR_MESSAGE/${id}`
       );
 
       if (res.data?.success && res.data?.data.length > 0) {
         const record = res.data.data[0];
-        console.log("Fetched Edit Record:", record);
+
         const mappedRow = {
-          projectId: record.PROJECT_ID || 0,
-          projectName: record.PROJECT_NAME || "",
-          languageId: record.Language_ID || "",
+          errorId: record.ERROR_ID || 0,
+          errorPrefixId: record.ERROR_PREFIX_ID || "",
+          errorMsg: record.ERROR_MSG || "",
+          errorCode: record.ERROR_CODE || "",
           inactiveReason: record.C2C_Inactive_Reason || "",
           status: record.C2C_Status === 1,
           createdUser: record.C2C_Cuser || 1,
           createdDate: record.C2C_Cdate || "",
         };
-
-        console.log("Fetched Edit Data:", mappedRow);
 
         setEditRow(mappedRow);
         setActiveTab("insert");
@@ -257,7 +255,7 @@ const ProjectPage = () => {
               {activeTab === "insert" ? (
                 <div className="form-area">
                   <FormGrid
-                    title="Project Creation"
+                    title="Error Message Creation"
                     fields={fields}
                     onSubmit={handleFormSubmit}
                     isLoading={isLoading}
@@ -267,11 +265,11 @@ const ProjectPage = () => {
                 </div>
               ) : (
                 <MasterGrid
-                  title="Project Master Grid"
+                  title="Error Message Master Grid"
                   data={gridData}
                   isLoading={isLoading}
                   error={error}
-                  moduleName="ProjectMaster"
+                  moduleName="ErrorMsgMaster"
                   onEdit={handleEdit}
                 />
               )}
@@ -286,4 +284,4 @@ const ProjectPage = () => {
   );
 };
 
-export default ProjectPage;
+export default ErrorMsgPage;

@@ -8,19 +8,28 @@ import {
 
 // Lazy imports for pages
 const LanguagePage = lazy(() =>
-  import("./pages/LanguagePage/LanguagePage.jsx")
+  import("./pages/commonPage/LanguagePage/LanguagePage.jsx")
 );
-const ProjectPage = lazy(() => import("./pages/ProjectPage/ProjectPage.jsx"));
-const ModulePage = lazy(() => import("./pages/ModulePage/ModulePage.jsx"));
+const ProjectPage = lazy(() =>
+  import("./pages/commonPage/ProjectPage/ProjectPage.jsx")
+);
+const ModulePage = lazy(() =>
+  import("./pages/commonPage/ModulePage/ModulePage.jsx")
+);
 const DbConnectionPage = lazy(() =>
-  import("./pages/DbConnectionPage/DbConnectionPage.jsx")
+  import("./pages/commonPage/DbConnectionPage/DbConnectionPage.jsx")
 );
-const LovPage = lazy(() => import("./pages/LovPage/LovPage.jsx"));
+const LovPage = lazy(() => import("./pages/commonPage/LovPage/LovPage.jsx"));
 const LovDetailsPage = lazy(() =>
-  import("./pages/LovDetailsPage/LovDetailsPage.jsx")
+  import("./pages/commonPage/LovDetailsPage/LovDetailsPage.jsx")
 );
-const ErrorMsgPage = lazy(() => import("./pages/ErrorMsg/ErrorMsgPage.jsx"));
-const ProductPage = lazy(() => import("./pages/ProductPage/ProductPage.jsx"));
+const ErrorMsgPage = lazy(() =>
+  import("./pages/commonPage/ErrorMsg/ErrorMsgPage.jsx")
+);
+const ProductPage = lazy(() =>
+  import("./pages/commonPage/ProductPage/ProductPage.jsx")
+);
+const GenPage = lazy(() => import("./pages/mySQLTool/GenPage/GenPage.jsx"));
 
 function App() {
   return (
@@ -43,6 +52,7 @@ function App() {
           <Route path="/lov-det" element={<LovDetailsPage />} />
           <Route path="/err-msg" element={<ErrorMsgPage />} />
           <Route path="/product" element={<ProductPage />} />
+          <Route path="/gen-page" element={<GenPage />} />
         </Routes>
       </Suspense>
     </Router>

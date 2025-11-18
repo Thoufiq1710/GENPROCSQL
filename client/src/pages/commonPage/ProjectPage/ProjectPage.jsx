@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import axiosClient from "../../api/axiosClient";
-import Header from "../../components/Header/Header";
-import LeftTabMenu from "../../components/LeftTabMenu/LeftTabMenu";
-import TabMenu from "../../components/Tabs/TabMenu";
-import MasterGrid from "../../components/MasterGrid/MasterGrid";
-import FormGrid from "../../components/FormGrid/FormGrid";
-import Toaster from "../../components/Toaster/Toaster";
+import axiosClient from "../../../api/axiosClient";
+import Header from "../../../components/Header/Header";
+import LeftTabMenu from "../../../components/LeftTabMenu/LeftTabMenu";
+import TabMenu from "../../../components/Tabs/TabMenu";
+import MasterGrid from "../../../components/MasterGrid/MasterGrid"; 
+import FormGrid from "../../../components/FormGrid/FormGrid";
+import Toaster from "../../../components/Toaster/Toaster";
 import { Container, Row, Col } from "react-bootstrap";
-import "../Style.css";
+import "../../Style.css";
 
-const ProductPage = () => {
+const ProjectPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverResponse, setServerResponse] = useState(null);
   const [activeTab, setActiveTab] = useState("master");
@@ -17,42 +17,43 @@ const ProductPage = () => {
   const [error, setError] = useState("");
   const [editRow, setEditRow] = useState(null);
   const [toastData, setToastData] = useState([]);
-  const [projectOptions, setProjectOptions] = useState([]);
+  const [languageOptions, setLanguageOptions] = useState([]);
 
-  // 🔹 Fetch Project List for dropdown
-  const fetchProjects = async () => {
+  // Fetch Dropdown Data (Language List)
+  const fetchLanguages = async () => {
     try {
-      const res = await axiosClient.get("/common/drop-down/PROJECT/NULL");
+      const res = await axiosClient.get("/common/drop-down/LANGUAGE/NULL");
       if (res.data?.result && Array.isArray(res.data.result)) {
         const formatted = res.data.result.map((item) => ({
           label: item.Name,
           value: item.Id,
         }));
-        setProjectOptions(formatted);
+        setLanguageOptions(formatted);
+        console.log("Fetched language options:", formatted);
       } else {
         console.warn("Invalid response structure:", res.data);
       }
     } catch (err) {
-      console.error("Failed to fetch project list:", err);
+      console.error("Failed to fetch dropdown list:", err);
     }
   };
 
-  // 🔹 Fetch Product master grid
+  // Fetch Project Master Grid
   const fetchMasterGrid = async () => {
     setIsLoading(true);
     setError("");
     try {
       const res = await axiosClient.get(
-        "/common/master-grid/DCS_M_PRODUCT/null"
+        "/common/master-grid/DCS_M_PROJECT/null"
       );
       if (res.data?.success && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
       } else {
-        setError("Invalid response format from product API.");
+        setError("Invalid response format.");
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch product data.");
+      setError("Failed to fetch master grid data.");
     } finally {
       setIsLoading(false);
     }
@@ -60,58 +61,41 @@ const ProductPage = () => {
 
   useEffect(() => {
     fetchMasterGrid();
-    fetchProjects();
+    fetchLanguages();
   }, []);
-  console.log("Project options:", gridData);
-  // 🔹 Product Form Fields
+
+  console.log("Language Options:", languageOptions);
+  // ✅ Project Form Fields
   const fields = [
     {
-      name: "projectId",
-      label: "Project",
-      type: "select",
-      required: true,
-      options: projectOptions,
-      validate: (value) => {
-        if (!value || value === "0" || value === 0)
-          return "Please select a project";
-        return true;
-      },
-    },
-    {
-      name: "productName",
-      label: "Product Name",
+      name: "projectName",
+      label: "Project Name",
       type: "text",
       required: true,
       validate: (value) => {
-        if (!value?.trim()) return "Product name is required";
+        if (!value?.trim()) return "Project name is required";
         if (!/^[A-Za-z0-9\s._-]+$/.test(value))
-          return "Product name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
+          return "Project name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
         if (value.length < 3)
-          return "Product name must be at least 3 characters long";
+          return "Project name must be at least 3 characters long";
         if (value.length > 100)
-          return "Product name cannot exceed 100 characters";
+          return "Project name cannot exceed 100 characters";
         return true;
       },
     },
     {
-      name: "productDescription",
-      label: "Product Description",
-      type: "textarea",
-      required: false,
-      validate: (value) => {
-        if (value?.trim() && value.length < 5)
-          return "Description must be at least 5 characters long";
-        if (value?.length > 300)
-          return "Description cannot exceed 300 characters";
-        return true;
-      },
-    },
-    {
-      name: "status",
-      label: "Status",
-      type: "checkbox",
+      name: "languageId",
+      label: "Language",
+      type: "select",
       required: true,
+      options: languageOptions,
+      validate: (value) => {
+        if (!value || value === "0" || value === 0)
+          return "Please select a language";
+        return true;
+      },
     },
+    { name: "status", label: "Status", type: "checkbox", required: true },
     {
       name: "inactiveReason",
       label: "Inactive Reason",
@@ -120,7 +104,7 @@ const ProductPage = () => {
       validate: (value, row) => {
         if (row.status === false) {
           if (!value?.trim())
-            return "Inactive reason is required when product is inactive";
+            return "Inactive reason is required when project is inactive";
           if (value.length < 5)
             return "Inactive reason must be at least 5 characters long";
         }
@@ -135,7 +119,7 @@ const ProductPage = () => {
     },
   ];
 
-  // 🔹 Tabs Configuration
+  // ✅ Tabs Configuration
   const tabs = [
     {
       key: "master",
@@ -145,30 +129,30 @@ const ProductPage = () => {
     },
     {
       key: "insert",
-      label: "Insert Product",
+      label: "Insert the Project",
       onClick: (key) => setActiveTab(key),
       active: activeTab === "insert",
     },
   ];
 
-  // 🔹 Submit Handler
+  // ✅ Submit Handler
   const handleFormSubmit = async (rows) => {
     setIsLoading(true);
     setServerResponse(null);
     try {
       const payload = rows.map((r) => ({
         ...r,
-        productId: editRow?.productId || 0, // update if editing
+        projectId: editRow?.projectId || 0,
       }));
 
-      const res = await axiosClient.post("/api/common/product/names", payload);
+      const res = await axiosClient.post("/common/project/names", payload);
       const data = res.data;
       setServerResponse(data);
 
-      if (data.success && !data.failedProducts?.length) {
+      if (data.success && !data.failedProjects?.length) {
         setToastData([
           {
-            text: data.message || "Product saved successfully.",
+            text: data.message || "Project saved successfully.",
             variant: "success",
           },
         ]);
@@ -178,15 +162,17 @@ const ProductPage = () => {
         return;
       }
 
-      if (data.failedProducts?.length > 0) {
+      if (data.failedProjects?.length > 0) {
         const summaryToast = {
           text: `${data.message} — Total: ${data.summary.total}, Inserted: ${data.summary.inserted}, Failed: ${data.summary.failed}`,
           variant: "warning",
         };
-        const failedToasts = data.failedProducts.map((f) => ({
-          text: `❌ ${f.productName}: ${f.error}`,
+
+        const failedToasts = data.failedProjects.map((f) => ({
+          text: `❌ ${f.project.projectName}: ${f.error}`,
           variant: "danger",
         }));
+
         setToastData([summaryToast, ...failedToasts]);
         return;
       }
@@ -198,7 +184,7 @@ const ProductPage = () => {
       console.error(err);
       setToastData([
         {
-          text: err.response?.data?.message || "Error submitting form.",
+          text: err.response?.data?.message || "Error submitting project data.",
           variant: "danger",
         },
       ]);
@@ -207,29 +193,27 @@ const ProductPage = () => {
     }
   };
 
-  // 🔹 Edit Handler
+  // ✅ Edit Handler
   const handleEdit = async (rowData) => {
     try {
-      console.log("Row data for editing:", rowData);
-      const id = rowData.Product_ID;
+      const id = rowData.PROJECT_ID;
       if (!id) {
-        console.error("Invalid MODULE_ID for editing:", rowData);
+        console.error("Invalid PROJECT_ID for editing:", rowData);
         return;
       }
       setIsLoading(true);
 
       const res = await axiosClient.get(
-        `/common/master-grid/editbind/DCS_M_PRODUCT/${id}`
+        `/common/master-grid/editbind/DCS_M_PROJECT/${id}`
       );
 
       if (res.data?.success && res.data?.data.length > 0) {
         const record = res.data.data[0];
-
+        console.log("Fetched Edit Record:", record);
         const mappedRow = {
-          productId: record.Product_ID || 0,
-          productName: record.Product_Name,
-          productDescription: record.Product_Description || "",
-          projectId: record.Project_ID || "",
+          projectId: record.PROJECT_ID || 0,
+          projectName: record.PROJECT_NAME || "",
+          languageId: record.Language_ID || "",
           inactiveReason: record.C2C_Inactive_Reason || "",
           status: record.C2C_Status === 1,
           createdUser: record.C2C_Cuser || 1,
@@ -242,7 +226,7 @@ const ProductPage = () => {
         setActiveTab("insert");
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        setError("No data found for the selected module record.");
+        setError("No data found for the selected project record.");
       }
     } catch (error) {
       console.error("Edit fetch failed:", err);
@@ -273,7 +257,7 @@ const ProductPage = () => {
               {activeTab === "insert" ? (
                 <div className="form-area">
                   <FormGrid
-                    title="Product Creation"
+                    title="Project Creation"
                     fields={fields}
                     onSubmit={handleFormSubmit}
                     isLoading={isLoading}
@@ -283,11 +267,11 @@ const ProductPage = () => {
                 </div>
               ) : (
                 <MasterGrid
-                  title="Product Master Grid"
+                  title="Project Master Grid"
                   data={gridData}
                   isLoading={isLoading}
                   error={error}
-                  moduleName="ProductMaster"
+                  moduleName="ProjectMaster"
                   onEdit={handleEdit}
                 />
               )}
@@ -295,11 +279,11 @@ const ProductPage = () => {
           </Row>
         </Container>
 
-        {/* Toast Notification */}
+        {/* Toast Notifications */}
         <Toaster toastData={toastData} setToastData={setToastData} />
       </main>
     </div>
   );
 };
 
-export default ProductPage;
+export default ProjectPage;

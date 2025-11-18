@@ -14,6 +14,7 @@ function LeftTabMenu() {
     { path: "/lov-det", icon: "🔍", label: "List of Values Details" },
     { path: "/err-msg", icon: "❗", label: "Error Messages" },
     { path: "/product", icon: "📦", label: "Product" },
+    { path: "/gen-page", icon: "⚙️", label: "Gen Page" },
   ];
 
   return (
