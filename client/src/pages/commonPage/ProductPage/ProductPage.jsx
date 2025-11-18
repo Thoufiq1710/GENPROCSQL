@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import axiosClient from "../../api/axiosClient";
-import Header from "../../components/Header/Header";
-import LeftTabMenu from "../../components/LeftTabMenu/LeftTabMenu";
-import TabMenu from "../../components/Tabs/TabMenu";
-import MasterGrid from "../../components/MasterGrid/MasterGrid";
-import FormGrid from "../../components/FormGrid/FormGrid";
-import Toaster from "../../components/Toaster/Toaster";
+import axiosClient from "../../../api/axiosClient";
+import Header from "../../../components/Header/Header";
+import LeftTabMenu from "../../../components/LeftTabMenu/LeftTabMenu";
+import TabMenu from "../../../components/Tabs/TabMenu";
+import MasterGrid from "../../../components/MasterGrid/MasterGrid";
+import FormGrid from "../../../components/FormGrid/FormGrid";
+import Toaster from "../../../components/Toaster/Toaster";
 import { Container, Row, Col } from "react-bootstrap";
-import "../Style.css";
+import "../../Style.css";
 
-const ModulePage = () => {
+const ProductPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [serverResponse, setServerResponse] = useState(null);
   const [activeTab, setActiveTab] = useState("master");
@@ -19,7 +19,7 @@ const ModulePage = () => {
   const [toastData, setToastData] = useState([]);
   const [projectOptions, setProjectOptions] = useState([]);
 
-  //  Fetch Project List for Dropdown
+  // 🔹 Fetch Project List for dropdown
   const fetchProjects = async () => {
     try {
       const res = await axiosClient.get("/common/drop-down/PROJECT/NULL");
@@ -29,7 +29,6 @@ const ModulePage = () => {
           value: item.Id,
         }));
         setProjectOptions(formatted);
-        console.log("Fetched project options:", formatted);
       } else {
         console.warn("Invalid response structure:", res.data);
       }
@@ -38,21 +37,22 @@ const ModulePage = () => {
     }
   };
 
+  // 🔹 Fetch Product master grid
   const fetchMasterGrid = async () => {
     setIsLoading(true);
     setError("");
     try {
       const res = await axiosClient.get(
-        "/common/master-grid/DCS_M_MODULE/null"
+        "/common/master-grid/DCS_M_PRODUCT/null"
       );
       if (res.data?.success && Array.isArray(res.data.data)) {
         setGridData(res.data.data);
       } else {
-        setError("Invalid response format from master grid.");
+        setError("Invalid response format from product API.");
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch master grid data.");
+      setError("Failed to fetch product data.");
     } finally {
       setIsLoading(false);
     }
@@ -62,8 +62,8 @@ const ModulePage = () => {
     fetchMasterGrid();
     fetchProjects();
   }, []);
-
-  // Module Form Fields
+  console.log("Project options:", gridData);
+  // 🔹 Product Form Fields
   const fields = [
     {
       name: "projectId",
@@ -78,24 +78,24 @@ const ModulePage = () => {
       },
     },
     {
-      name: "moduleName",
-      label: "Module Name",
+      name: "productName",
+      label: "Product Name",
       type: "text",
       required: true,
       validate: (value) => {
-        if (!value?.trim()) return "Module name is required";
+        if (!value?.trim()) return "Product name is required";
         if (!/^[A-Za-z0-9\s._-]+$/.test(value))
-          return "Module name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
+          return "Product name can only contain letters, numbers, spaces, dots, underscores, or hyphens";
         if (value.length < 3)
-          return "Module name must be at least 3 characters long";
+          return "Product name must be at least 3 characters long";
         if (value.length > 100)
-          return "Module name cannot exceed 100 characters";
+          return "Product name cannot exceed 100 characters";
         return true;
       },
     },
     {
-      name: "moduleDes",
-      label: "Module Description",
+      name: "productDescription",
+      label: "Product Description",
       type: "textarea",
       required: false,
       validate: (value) => {
@@ -120,7 +120,7 @@ const ModulePage = () => {
       validate: (value, row) => {
         if (row.status === false) {
           if (!value?.trim())
-            return "Inactive reason is required when module is inactive";
+            return "Inactive reason is required when product is inactive";
           if (value.length < 5)
             return "Inactive reason must be at least 5 characters long";
         }
@@ -135,7 +135,7 @@ const ModulePage = () => {
     },
   ];
 
-  //  Tabs Configuration
+  // 🔹 Tabs Configuration
   const tabs = [
     {
       key: "master",
@@ -145,30 +145,30 @@ const ModulePage = () => {
     },
     {
       key: "insert",
-      label: "Insert Module",
+      label: "Insert Product",
       onClick: (key) => setActiveTab(key),
       active: activeTab === "insert",
     },
   ];
 
-  //  Submit Handler
+  // 🔹 Submit Handler
   const handleFormSubmit = async (rows) => {
     setIsLoading(true);
     setServerResponse(null);
     try {
       const payload = rows.map((r) => ({
         ...r,
-        moduleId: editRow?.moduleId || 0, // update if editing
+        productId: editRow?.productId || 0, // update if editing
       }));
 
-      const res = await axiosClient.post("/common/module/names", payload);
+      const res = await axiosClient.post("/api/common/product/names", payload);
       const data = res.data;
       setServerResponse(data);
 
-      if (data.success && !data.failedModules?.length) {
+      if (data.success && !data.failedProducts?.length) {
         setToastData([
           {
-            text: data.message || "Module saved successfully.",
+            text: data.message || "Product saved successfully.",
             variant: "success",
           },
         ]);
@@ -178,13 +178,13 @@ const ModulePage = () => {
         return;
       }
 
-      if (data.failedModules?.length > 0) {
+      if (data.failedProducts?.length > 0) {
         const summaryToast = {
           text: `${data.message} — Total: ${data.summary.total}, Inserted: ${data.summary.inserted}, Failed: ${data.summary.failed}`,
           variant: "warning",
         };
-        const failedToasts = data.failedModules.map((f) => ({
-          text: `❌ ${f.module.moduleName}: ${f.error}`,
+        const failedToasts = data.failedProducts.map((f) => ({
+          text: `❌ ${f.productName}: ${f.error}`,
           variant: "danger",
         }));
         setToastData([summaryToast, ...failedToasts]);
@@ -207,10 +207,11 @@ const ModulePage = () => {
     }
   };
 
-  //  Edit Handler
+  // 🔹 Edit Handler
   const handleEdit = async (rowData) => {
     try {
-      const id = rowData.MODULE_ID;
+      console.log("Row data for editing:", rowData);
+      const id = rowData.Product_ID;
       if (!id) {
         console.error("Invalid MODULE_ID for editing:", rowData);
         return;
@@ -218,17 +219,17 @@ const ModulePage = () => {
       setIsLoading(true);
 
       const res = await axiosClient.get(
-        `/common/master-grid/editbind/DCS_M_MODULE/${id}`
+        `/common/master-grid/editbind/DCS_M_PRODUCT/${id}`
       );
 
       if (res.data?.success && res.data?.data.length > 0) {
         const record = res.data.data[0];
 
         const mappedRow = {
-          moduleId: record.MODULE_ID || 0,
-          moduleName: record.MODULE_NAME,
-          moduleDes: record.MODULE_DES || "",
-          projectId: record.PROJECT_ID || "",
+          productId: record.Product_ID || 0,
+          productName: record.Product_Name,
+          productDescription: record.Product_Description || "",
+          projectId: record.Project_ID || "",
           inactiveReason: record.C2C_Inactive_Reason || "",
           status: record.C2C_Status === 1,
           createdUser: record.C2C_Cuser || 1,
@@ -250,6 +251,7 @@ const ModulePage = () => {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="master-page">
       {/* Sidebar */}
@@ -271,7 +273,7 @@ const ModulePage = () => {
               {activeTab === "insert" ? (
                 <div className="form-area">
                   <FormGrid
-                    title="Module Creation"
+                    title="Product Creation"
                     fields={fields}
                     onSubmit={handleFormSubmit}
                     isLoading={isLoading}
@@ -281,11 +283,11 @@ const ModulePage = () => {
                 </div>
               ) : (
                 <MasterGrid
-                  title="Module Master Grid"
+                  title="Product Master Grid"
                   data={gridData}
                   isLoading={isLoading}
                   error={error}
-                  moduleName="ModuleMaster"
+                  moduleName="ProductMaster"
                   onEdit={handleEdit}
                 />
               )}
@@ -293,11 +295,11 @@ const ModulePage = () => {
           </Row>
         </Container>
 
-        {/*  Toaster for notifications */}
+        {/* Toast Notification */}
         <Toaster toastData={toastData} setToastData={setToastData} />
       </main>
     </div>
   );
 };
 
-export default ModulePage;
+export default ProductPage;
