@@ -161,7 +161,7 @@ const ProductPage = () => {
         productId: editRow?.productId || 0, // update if editing
       }));
 
-      const res = await axiosClient.post("/api/common/product/names", payload);
+      const res = await axiosClient.post("/common/product/names", payload);
       const data = res.data;
       setServerResponse(data);
 
