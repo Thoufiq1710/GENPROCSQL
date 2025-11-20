@@ -79,7 +79,6 @@ form label {
 /* ----------- ROW & COLUMN SPACING ----------- */
 .row {
   margin-bottom: 15px;
-  
 }
 
 .col-md-3,
@@ -107,4 +106,9 @@ button.btn-primary:hover {
   width: calc(100% - 250px);
   overflow-y: auto;
   padding-bottom: 30px;
+}
+
+.header-row h4 {
+  font-size: 22px;
+  font-weight: 700;
 }
