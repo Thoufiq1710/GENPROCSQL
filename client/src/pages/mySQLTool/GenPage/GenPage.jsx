@@ -97,6 +97,12 @@ const GenPage = () => {
 
     if (name === "tableName") {
       fetchColumns(value);
+
+      setForm((prev) => ({
+        ...prev,
+        tableName: value,
+        columns: [{ ...emptyColumnRow }],
+      }));
     }
   };
 
@@ -147,10 +153,10 @@ const GenPage = () => {
 
     try {
       await axiosClient.post("/mysql-tool/sp-gen/", payload);
-      alert("SP Generated Successfully!");
+      alert("SP Generated Details added Successfully!");
     } catch (err) {
       console.error(err);
-      alert("Error generating SP!");
+      alert("Error!");
     }
   };
 
@@ -165,40 +171,71 @@ const GenPage = () => {
 
         <Container fluid className="py-4">
           <Card className="p-4 shadow-sm rounded">
-            <h4 className="mb-4">SP Generator</h4>
+            {/* HEADER ROW */}
+            <div className="header-row d-flex justify-content-between align-items-center mb-4">
+              <h4 className="mb-0">SP Generator</h4>
+
+              <Button
+                variant="warning"
+                onClick={() =>
+                  setForm({
+                    projectId: "",
+                    moduleId: "",
+                    productId: "",
+                    spName: "",
+                    spDescription: "",
+                    authorName: "",
+                    tableName: "",
+                    userVar: "",
+                    scopeVar: "",
+                    scopeIdentity: true,
+                    errMsg: true,
+                    status: true,
+                    inactiveReason: "",
+                    user: 1,
+                    columns: [],
+                  })
+                }
+              >
+                Clear
+              </Button>
+            </div>
 
             {/* TOP ROW */}
             <Row className="mb-3">
-              <Col md={3}>
+              <Col md={4}>
                 <Form.Label>Project</Form.Label>
                 <Select
                   options={projects}
-                  value={projects.find((p) => p.value === form.projectId)}
+                  value={
+                    projects.find((p) => p.value === form.projectId) || null
+                  }
                   onChange={(s) => handleSelectChange("projectId", s)}
                 />
               </Col>
 
-              <Col md={3}>
+              <Col md={4}>
                 <Form.Label>Module</Form.Label>
                 <Select
                   options={modules}
-                  value={modules.find((m) => m.value === form.moduleId)}
+                  value={modules.find((m) => m.value === form.moduleId) || null}
                   onChange={(s) => handleSelectChange("moduleId", s)}
                 />
               </Col>
 
-              <Col md={3}>
+              <Col md={4}>
                 <Form.Label>Product</Form.Label>
                 <Select
                   options={products}
-                  value={products.find((p) => p.value === form.productId)}
+                  value={
+                    products.find((p) => p.value === form.productId) || null
+                  }
                   onChange={(s) => handleSelectChange("productId", s)}
                 />
               </Col>
             </Row>
 
-            {/* DETAILS */}
-            <Row className="mb-4">
+            <Row className="mb-3">
               <Col md={3}>
                 <Form.Label>Procedure Name</Form.Label>
                 <Form.Control
@@ -208,7 +245,7 @@ const GenPage = () => {
                 />
               </Col>
 
-              <Col md={3}>
+              <Col md={6}>
                 <Form.Label>Description</Form.Label>
                 <Form.Control
                   as="textarea"
@@ -232,13 +269,28 @@ const GenPage = () => {
               </Col>
             </Row>
 
+            {/* ROW 2 — Description Full Width
+            <Row className="mb-4">
+              <Col md={8}>
+                <Form.Label>Description</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={form.spDescription}
+                  onChange={(e) =>
+                    setForm({ ...form, spDescription: e.target.value })
+                  }
+                />
+              </Col>
+            </Row> */}
+
             {/* TABLE */}
             <Row className="mb-3">
               <Col md={4}>
                 <Form.Label>Select Table</Form.Label>
                 <Select
                   options={tables}
-                  value={tables.find((t) => t.value === form.tableName)}
+                  value={tables.find((t) => t.value === form.tableName) || null}
                   onChange={(s) => handleSelectChange("tableName", s)}
                 />
               </Col>
@@ -370,21 +422,8 @@ const GenPage = () => {
                     />
                   </Col>
                 </Row>
-
-                <Button
-                  variant="danger"
-                  size="sm"
-                  className="mt-3"
-                  onClick={() => removeColumnRow(index)}
-                >
-                  Remove Row
-                </Button>
               </Card>
             ))}
-
-            <Button variant="secondary" onClick={addColumnRow}>
-              + Add Column Row
-            </Button>
 
             <Row className="mt-4">
               <Col md={3}>
