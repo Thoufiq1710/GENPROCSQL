@@ -7,6 +7,7 @@ import TabMenu from "../../../components/Tabs/TabMenu";
 import { validateField } from "../../../utils/validationHelper";
 import Select from "react-select";
 import { highlightSQL } from "../../../utils/sqlHighlighter";
+import Toaster from "../../../components/Toaster/Toaster";
 import "./Style.css";
 
 const GenPage = () => {
@@ -20,6 +21,8 @@ const GenPage = () => {
   const [generatedId, setGeneratedId] = useState(null);
   const [generatedSp, setGeneratedSp] = useState("");
   const [activeTab, setActiveTab] = useState("insert");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [toastData, setToastData] = useState([]);
 
   const [form, setForm] = useState({
     projectId: "",
@@ -221,7 +224,7 @@ const GenPage = () => {
 
     if (errors.length > 0) {
       let msg = errors.map((e) => `• ${e.message}`).join("\n");
-      alert(msg);
+      showToast(msg, "danger");
       return;
     }
 
@@ -252,12 +255,13 @@ const GenPage = () => {
       if (res.data?.added?.length > 0) {
         const id = res.data.added[0].insertedId;
         setGeneratedId(id);
+        setIsSubmitted(true);
         setShowGenerate(true);
-        alert("SP details saved successfully");
+        showToast("SP details saved successfully", "success");
       }
     } catch (err) {
       console.error(err);
-      alert("Error!");
+      showToast("Something went wrong while saving", "danger");
     }
   };
 
@@ -274,8 +278,26 @@ const GenPage = () => {
       }
     } catch (err) {
       console.error(err);
-      alert("Error generating SP");
+      showToast("Error generating SP", "danger");
     }
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(generatedSp);
+    showToast("SP copied to clipboard!", "success");
+  };
+
+  const handleDownload = () => {
+    const element = document.createElement("a");
+    const file = new Blob([generatedSp], { type: "text/sql" });
+    element.href = URL.createObjectURL(file);
+    element.download = `${form.spName || "generated_sp"}.sql`;
+    document.body.appendChild(element);
+    element.click();
+  };
+
+  const showToast = (text, variant = "success") => {
+    setToastData((prev) => [...prev, { text, variant }]);
   };
 
   return (
@@ -286,6 +308,7 @@ const GenPage = () => {
 
       <main className="main-content">
         <Header />
+        <Toaster toastData={toastData} setToastData={setToastData} />
 
         <Container fluid className="py-4">
           <Card className="p-4 shadow-sm rounded">
@@ -417,20 +440,6 @@ const GenPage = () => {
                     </Col>
                   </Row>
 
-                  {/* ROW 2 — Description Full Width
-            <Row className="mb-4">
-              <Col md={8}>
-                <Form.Label>Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  value={form.spDescription}
-                  onChange={(e) =>
-                    setForm({ ...form, spDescription: e.target.value })
-                  }
-                />
-              </Col>
-            </Row> */}
 
                   {/* TABLE */}
                   <Row className="mb-3">
@@ -585,31 +594,42 @@ const GenPage = () => {
 
                   <Row className="mt-4">
                     <Col md={3}>
-                      <Button variant="primary" onClick={handleSubmit}>
-                        Submit
-                      </Button>
-                    </Col>
-
-                    {showGenerate && (
-                      <Col md={3}>
+                      {!isSubmitted ? (
+                        <Button variant="primary" onClick={handleSubmit}>
+                          Submit
+                        </Button>
+                      ) : (
                         <Button variant="success" onClick={handleGenerateSp}>
                           Generate
                         </Button>
-                      </Col>
-                    )}
+                      )}
+                    </Col>
                   </Row>
                 </>
               )}
 
-              {/* ✅ GENERATED SP TAB */}
               {activeTab === "generated" && (
                 <div className="generated-code-container">
+                  {/* ✅ COPY BUTTON AT TOP */}
+                  <div className="d-flex justify-content-end mb-2">
+                    <Button variant="secondary" onClick={handleCopy}>
+                      Copy
+                    </Button>
+                  </div>
+
                   <pre
                     className="generated-code"
                     dangerouslySetInnerHTML={{
                       __html: highlightSQL(generatedSp),
                     }}
                   />
+
+                  {/* ✅ DOWNLOAD BUTTON AT BOTTOM */}
+                  <div className="d-flex justify-content-end mt-3">
+                    <Button variant="primary" onClick={handleDownload}>
+                      Download
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
