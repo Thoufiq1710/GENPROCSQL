@@ -1,0 +1,52 @@
+{{! Primary Button Component Template }}
+
+import React from "react";
+
+const {{pascalCase labelName}} = ({
+  title = "{{labelName}}",
+  onClick,
+  type = "button",
+  disabled = false,
+  className = "",
+  ...props
+}) => {
+
+  {{#if eventHandlers.length}}
+  // Auto-generated event handlers for button
+  {{#each eventHandlers}}
+  {{#if (eq eventName "onClick")}}
+  const handle{{pascalCase functionName}} = (e) => {
+    {{functionName}}(e);
+  };
+  {{/if}}
+  {{/each}}
+  {{/if}}
+
+  const handleClick = (e) => {
+    if (disabled) return;
+
+    {{#if eventHandlers.length}}
+      {{#each eventHandlers}}
+        {{#if (eq eventName "onClick")}}
+        handle{{pascalCase functionName}}(e);
+        {{/if}}
+      {{/each}}
+    {{/if}}
+
+    if (onClick) onClick(e);
+  };
+
+  return (
+    <button
+      type={type}
+      disabled={disabled}
+      onClick={handleClick}
+      className={`primary-btn ${className}`}
+      {...props}
+    >
+      {title}
+    </button>
+  );
+};
+
+export default {{pascalCase labelName}};

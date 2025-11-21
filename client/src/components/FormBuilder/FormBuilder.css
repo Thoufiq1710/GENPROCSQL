@@ -1,0 +1,95 @@
+/* --- General Page Styling --- */
+.container {
+  max-width: 1400px;
+}
+
+h5 {
+  font-weight: 600;
+  color: #343a40;
+}
+
+/* --- Tabs Styling --- */
+.card.border-primary {
+  border-width: 2px !important;
+  background-color: #e9f5ff;
+  transition: all 0.2s ease-in-out;
+}
+
+.card.border-primary:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* --- Tab Form Styling --- */
+.card.p-3 {
+  background-color: #fff;
+  border-radius: 10px;
+}
+
+.form-control,
+.form-select {
+  font-size: 1.1rem;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+}
+
+/* --- Buttons --- */
+button.btn {
+  font-size: 1rem;
+  padding: 10px 20px;
+  border-radius: 8px;
+  transition: 0.2s ease-in-out;
+}
+
+button.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* --- Column Cards --- */
+.column-card {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  padding: 15px;
+  transition: all 0.2s ease;
+}
+
+.column-card:hover {
+  background-color: #e2e6ea;
+  transform: translateY(-2px);
+}
+
+/* --- Entered Data Table --- */
+table {
+  font-size: 0.95rem;
+}
+
+table th {
+  background-color: #0d6efd;
+  color: #fff;
+  font-weight: 500;
+}
+
+table td {
+  vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #f1f7ff;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 992px) {
+  .row > .col-md-3, .row > .col-md-9 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}

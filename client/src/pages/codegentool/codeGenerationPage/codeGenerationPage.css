@@ -1,0 +1,186 @@
+.code-generation-page-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.sidebar-section {
+  width: 280px;
+  flex-shrink: 0;
+}
+
+.main-content-section {
+  flex: 1;
+  padding: 20px;
+  margin-left: 50px;
+  min-height: 100vh;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.page-header h2 {
+  color: #321fdb;
+  font-weight: 600;
+  margin: 0;
+}
+
+.language-display {
+  font-size: 0.9rem;
+}
+
+.code-type-card {
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.config-summary-card {
+  height: fit-content;
+}
+
+.config-summary p {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.config-summary strong {
+  color: #495057;
+}
+
+.code-display-card {
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.placeholder-card {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-icon {
+  opacity: 0.5;
+}
+
+.generated-code {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 20px;
+  max-height: 500px;
+  overflow-y: auto;
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.code-type-buttons .btn {
+  text-align: left;
+  font-size: 0.9rem;
+  padding: 12px 15px;
+  transition: all 0.2s ease;
+}
+
+.code-type-buttons .btn:hover {
+  transform: translateX(5px);
+}
+
+.code-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #e9ecef;
+  padding-top: 20px;
+}
+
+/* Scrollbar styling for code */
+.generated-code::-webkit-scrollbar {
+  width: 8px;
+}
+
+.generated-code::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.generated-code::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.generated-code::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* Syntax highlighting for better readability */
+.generated-code {
+  color: #d4d4d4;
+}
+
+.generated-code .comment {
+  color: #6a9955;
+}
+
+.generated-code .keyword {
+  color: #569cd6;
+}
+
+.generated-code .string {
+  color: #ce9178;
+}
+
+.generated-code .function {
+  color: #dcdcaa;
+}
+
+.generated-code .number {
+  color: #b5cea8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .code-generation-page-container {
+    flex-direction: column;
+  }
+
+  .sidebar-section {
+    width: 100%;
+  }
+
+  .main-content-section {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .code-actions {
+    flex-direction: column;
+  }
+
+  .code-actions .btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .code-type-buttons .btn {
+    font-size: 0.8rem;
+    padding: 10px 12px;
+  }
+}

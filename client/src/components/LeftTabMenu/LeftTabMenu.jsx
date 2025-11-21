@@ -4,18 +4,22 @@ import "./LeftTabMenu.css";
 
 function LeftTabMenu() {
   const location = useLocation();
+const menuItems = [
+  { path: "/language", icon: "🌐", label: "Language" },
+  { path: "/project", icon: "📁", label: "Project" },
+  { path: "/module", icon: "🧩", label: "Module" },
+  { path: "/dbconnect", icon: "🗄️", label: "Db Connection" },
+  { path: "/lov", icon: "📋", label: "List of Values" },
+  { path: "/lov-det", icon: "🔍", label: "List of Values Details" },
+  { path: "/err-msg", icon: "❗", label: "Error Messages" },
+  { path: "/product", icon: "📦", label: "Product" },
+  { path: "/gen-page", icon: "⚙️", label: "Gen Page" },
 
-  const menuItems = [
-    { path: "/language", icon: "🌐", label: "Language" },
-    { path: "/project", icon: "📁", label: "Project" },
-    { path: "/module", icon: "🧩", label: "Module" },
-    { path: "/dbconnect", icon: "🗄️", label: "Db Connection" },
-    { path: "/lov", icon: "📋", label: "List of Values" },
-    { path: "/lov-det", icon: "🔍", label: "List of Values Details" },
-    { path: "/err-msg", icon: "❗", label: "Error Messages" },
-    { path: "/product", icon: "📦", label: "Product" },
-    { path: "/gen-page", icon: "⚙️", label: "Gen Page" },
-  ];
+  // ⭐ UPDATED PATHS
+  { path: "/project/field-type", icon: "📝", label: "Field Type" },
+  { path: "/project/snippet", icon: "💻", label: "Snippet Creation" },
+
+];
 
   return (
     <aside className="left-tab-menu">

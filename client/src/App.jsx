@@ -6,7 +6,6 @@ import {
   Navigate,
 } from "react-router-dom";
 
-// Lazy imports for pages
 const LanguagePage = lazy(() =>
   import("./pages/commonPage/LanguagePage/LanguagePage.jsx")
 );
@@ -31,10 +30,17 @@ const ProductPage = lazy(() =>
 );
 const GenPage = lazy(() => import("./pages/mySQLTool/GenPage/GenPage.jsx"));
 
+const FieldTypePage = lazy(() =>
+  import("./pages/codegentool/FieldTypePage/FieldTypePage.jsx")
+);
+
+const SnippetPage = lazy(() =>
+  import("./pages/codegentool/SnippetPage/SnippetPage.jsx")
+);
+
 function App() {
   return (
     <Router>
-      {/* Suspense will show fallback UI while the component is being loaded */}
       <Suspense
         fallback={
           <div style={{ textAlign: "center", marginTop: "50px" }}>
@@ -53,6 +59,8 @@ function App() {
           <Route path="/err-msg" element={<ErrorMsgPage />} />
           <Route path="/product" element={<ProductPage />} />
           <Route path="/gen-page" element={<GenPage />} />
+          <Route path="/project/field-type" element={<FieldTypePage />} />
+          <Route path="/project/snippet" element={<SnippetPage />} />
         </Routes>
       </Suspense>
     </Router>

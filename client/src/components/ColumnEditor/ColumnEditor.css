@@ -1,0 +1,110 @@
+/* --- Card Styling --- */
+.column-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease-in-out;
+}
+
+.column-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Form Labels --- */
+.column-card .form-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+/* --- Form Controls --- */
+.column-card .form-control,
+.column-card .form-select {
+  font-size: 1rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  transition: all 0.2s ease;
+}
+
+.column-card .form-control:focus,
+.column-card .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* --- Validation Badges --- */
+.column-card .badge {
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+}
+
+.column-card .badge:hover {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+/* --- Buttons --- */
+.column-card button {
+  padding: 8px 18px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.column-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Row Spacing --- */
+.column-card .row {
+  margin-bottom: 15px;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 992px) {
+  .column-card .row > [class*="col-"] {
+    margin-bottom: 10px;
+  }
+}
+/* Success highlight */
+.success-highlight {
+  background-color: #c2f0c2; /* green for success */
+  color: #000; /* text color */
+  padding: 5px 10px; /* optional styling */
+  border-radius: 4px; /* optional styling */
+}
+
+/* Error highlight */
+.error-highlight {
+  background-color: #ffcccc; /* red for error */
+  color: #000; /* text color */
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+/* ColumnEditor.css */
+.event-handler-modal-container {
+  position: relative;
+  z-index: 1000;
+}
+
+.column-editor-wrapper {
+  position: relative;
+}
+
+/* Ensure modal stays within column editor context */
+.modal-backdrop {
+  z-index: 1040 !important;
+}
+
+.modal {
+  z-index: 1050 !important;
+}

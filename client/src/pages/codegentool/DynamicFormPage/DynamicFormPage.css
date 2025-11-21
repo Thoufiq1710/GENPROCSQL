@@ -1,0 +1,15 @@
+.dynamic-form-page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding: 20px;
+  width: 90%;
+  margin: auto;
+  max-width: 1600px;
+}
+
+
+.dynamic-form-page h3 {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
